@@ -22,9 +22,9 @@ func GitIsValidRepo() bool {
 }
 
 func GitBranchExists(branch string) bool {
-	cmd := exec.Command("git", "branch", "|", "egrep", branch)
+	cmd := exec.Command("bash", "-c", fmt.Sprintf("git branch | egrep %s", branch))
 	_, err := cmd.Output()
-	
+
 	return err == nil
 }
 
@@ -151,14 +151,12 @@ func CleanFeature(cwd string, feature *lib.Feature) error {
 	return nil
 }
 
-func ExecFeature(opts []string) {
-	if len(opts) < 1 {
+func ExecFeature(jira, comment string, fromFeature bool) {
+	if jira == "" {
 		usage()
 		os.Exit(0)
 	}
 
-	jira := opts[0]
-	comment := strings.Join(opts[1:], " ")
 	if comment == "" {
 		comment = "Feature Branch"
 	}
@@ -187,12 +185,7 @@ func ExecFeature(opts []string) {
 	}
 
 	if GitBranchExists(feature.Jira) {
-		lib.GetLogger().Error(fmt.Sprintf("There is already a branch in this repo titled %s", feature.Jira))
-		os.Exit(1)
-	}
-
-	if PathExists(GOGDir) {
-		lib.GetLogger().Error(fmt.Sprintf("%s already exists ... there could already be a feature here. Please fix this and try again.", GOGDir))
+		lib.GetLogger().Error(fmt.Sprintf("There is already a branch in this repo named %s", feature.Jira))
 		os.Exit(1)
 	}
 
@@ -201,11 +194,16 @@ func ExecFeature(opts []string) {
 		os.Exit(1)
 	}
 
-	if !lib.StringInSlice(opts, "from-feature") {
+	if fromFeature {
 		if err := GitCheckoutDefaultBranch(); err != nil {
 			lib.GetLogger().Error(fmt.Sprintf("Failed to checkout default branch for repo. %v", err))
 			os.Exit(1)
 		}
+	}
+
+	if PathExists(GOGDir) {
+		lib.GetLogger().Error(fmt.Sprintf("%s already exists ... there could already be a feature here. Please fix this and try again.", GOGDir))
+		os.Exit(1)
 	}
 
 	if err := GitCreateBranch(feature.Jira, true); err != nil {
