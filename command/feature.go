@@ -158,7 +158,7 @@ func ExecFeature(opts []string) {
 	}
 
 	jira := opts[0]
-	comment := opts[1]
+	comment := strings.Join(opts[1:], " ")
 	if comment == "" {
 		comment = "Feature Branch"
 	}
@@ -168,7 +168,6 @@ func ExecFeature(opts []string) {
 		lib.GetLogger().Fatal("Failed to get working directory from path")
 	}
 	GOGDir := fmt.Sprintf("%s/%s", workingDir, ".gog")
-
 	feature, err := lib.NewFeature(jira, comment)
 	if err != nil {
 		lib.GetLogger().Error("Failed to create feature")
@@ -176,7 +175,6 @@ func ExecFeature(opts []string) {
 		os.Exit(1)
 	}
 
-	// 2. Check if inside git repository
 	if !GitIsValidRepo() {
 		lib.GetLogger().Error("The current directory does not contain a valid git repo ...")
 		os.Exit(1)
@@ -188,25 +186,21 @@ func ExecFeature(opts []string) {
 		os.Exit(1)
 	}
 
-	// 3. Check if there is already a branch with the same name as the one to create
 	if GitBranchExists(feature.Jira) {
 		lib.GetLogger().Error(fmt.Sprintf("There is already a branch in this repo titled %s", feature.Jira))
 		os.Exit(1)
 	}
 
-	// 4. Check if there is an existing .gog folder
 	if PathExists(GOGDir) {
 		lib.GetLogger().Error(fmt.Sprintf("%s already exists ... there could already be a feature here. Please fix this and try again.", GOGDir))
 		os.Exit(1)
 	}
 
-	// 5. Check if there are any unstaged commits
 	if GitUnstagedCommits() {
 		lib.GetLogger().Error(fmt.Sprintf("There is unstaged commits on your current branch (%s). For your safety, please stage or discard the changes to continue. %v", initial_branch, err))
 		os.Exit(1)
 	}
 
-	// 6. Check for from-feature condition
 	if !lib.StringInSlice(opts, "from-feature") {
 		if err := GitCheckoutDefaultBranch(); err != nil {
 			lib.GetLogger().Error(fmt.Sprintf("Failed to checkout default branch for repo. %v", err))
@@ -214,14 +208,11 @@ func ExecFeature(opts []string) {
 		}
 	}
 
-	// 8. Create a branch using the feature object (Jira parameter as the branch name)
-	// 9. Checkout to the new branch
 	if err := GitCreateBranch(feature.Jira, true); err != nil {
 		lib.GetLogger().Error(fmt.Sprintf("Failed to create or checkout new feature branch, %s. %v", feature.Jira, err))
 		os.Exit(1)
 	}
 
-	// 10. Create a .gog/feature.json file
 	if err := GOGNewFeature(workingDir, feature); err != nil {
 		lib.GetLogger().Error(fmt.Sprintf("Failed to create feature tracking file (%v) ... will exit cleanly", err))
 		if err := CleanFeature(workingDir, feature); err != nil {
