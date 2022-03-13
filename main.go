@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 
 	"sykesdev.ca/gog/command"
 	"sykesdev.ca/gog/lib"
@@ -32,16 +31,11 @@ func main() {
 	if len(flag.Args()) >= 1 {
 		subCmd := flag.Arg(0)
 
-		// create options
-		jira := flag.Arg(1)
-		comment := strings.Join(flag.Args()[2:], " ")
-		fromFeature := *flag.Bool("from-feature", false, "specifies if this feature will be based on the a current feature branch")
-
 		switch subCmd {
 		case subcommands[0]:
-			command.ExecFeature(jira, comment, fromFeature)
+			command.ExecFeature()
 		case subcommands[1]:
-			return
+			command.ExecPush()
 		case subcommands[2]:
 			return
 		default:

@@ -1,17 +1,18 @@
 package command
 
 import (
-	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"sykesdev.ca/gog/lib"
 )
 
-func usage() {
-	lib.GetLogger().Info("Usage: gog feature <jira_name> [comment]")
+func featureUsage() {
+	lib.GetLogger().Info("Usage: gog feature <jira_name> <comment>")
 }
 
 func GitIsValidRepo() bool {
@@ -26,13 +27,6 @@ func GitBranchExists(branch string) bool {
 	_, err := cmd.Output()
 
 	return err == nil
-}
-
-func GitUnstagedCommits() bool {
-	cmd := exec.Command("git", "diff-index", "--quiet", "HEAD")
-	_, err := cmd.Output()
-
-	return err != nil
 }
 
 func GitGetCurrentBranch() (string, error) {
@@ -109,18 +103,7 @@ func GOGNewFeature(cwd string, feature *lib.Feature) error {
 		}
 	}
 
-	f, err := os.Create(cwd + "/.gog/feature.json")
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	featureBytes, err := json.Marshal(*feature)
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(featureBytes)
+	err := feature.Save()
 	if err != nil {
 		return err
 	}
@@ -151,21 +134,33 @@ func CleanFeature(cwd string, feature *lib.Feature) error {
 	return nil
 }
 
-func ExecFeature(jira, comment string, fromFeature bool) {
-	if jira == "" {
-		usage()
-		os.Exit(0)
+func ExecFeature() {
+	if len(flag.Args()) < 3 {
+		lib.GetLogger().Error("Invalid usage of gogfeature ...")
+		featureUsage()
+		os.Exit(2)
 	}
+
+	jira := flag.Arg(1)
+	comment := strings.Join(flag.Args()[2:], " ")
+	fromFeature := *flag.Bool("from-feature", false, "specifies if this feature will be based on the a current feature branch")
 
 	if comment == "" {
 		comment = "Feature Branch"
 	}
 
-	workingDir, err := os.Getwd()
+	validJiraFormat, err := regexp.Match(`^[A-Z].*\-[0-9].*$`, []byte(jira))
 	if err != nil {
-		lib.GetLogger().Fatal("Failed to get working directory from path")
+		lib.GetLogger().Fatal(fmt.Sprintf("Failed to parse regular expression for Jira format. %v", err))
 	}
-	GOGDir := fmt.Sprintf("%s/%s", workingDir, ".gog")
+
+	if !validJiraFormat {
+		lib.GetLogger().Error("Invalid Jira format ... example of a valid format includes JIRA-0023")
+		os.Exit(1)
+	}
+
+	workingDir, GOGDir := lib.GetWorkspacePaths()
+
 	feature, err := lib.NewFeature(jira, comment)
 	if err != nil {
 		lib.GetLogger().Error("Failed to create feature")
@@ -189,12 +184,17 @@ func ExecFeature(jira, comment string, fromFeature bool) {
 		os.Exit(1)
 	}
 
-	if GitUnstagedCommits() {
+	if lib.GitHasUnstagedCommits() {
 		lib.GetLogger().Error(fmt.Sprintf("There is unstaged commits on your current branch (%s). For your safety, please stage or discard the changes to continue. %v", initial_branch, err))
 		os.Exit(1)
 	}
 
-	if fromFeature {
+	if lib.GitHasUncommittedChanges() {
+		lib.GetLogger().Error(fmt.Sprintf("There are staged commits on your current branch (%s) which have not been committed. %v", initial_branch, err))
+		os.Exit(1)
+	}
+
+	if !fromFeature {
 		if err := GitCheckoutDefaultBranch(); err != nil {
 			lib.GetLogger().Error(fmt.Sprintf("Failed to checkout default branch for repo. %v", err))
 			os.Exit(1)
