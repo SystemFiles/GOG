@@ -17,6 +17,23 @@ func NewFeature(jira, comment string) (*Feature, error) {
 	return feat, nil
 }
 
+func NewFeatureFromFile() (*Feature, error) {
+	_, GOGDir := GetWorkspacePaths()
+	
+	featureBytes, err := os.ReadFile(GOGDir + "/feature.json")
+	if err != nil {
+		return nil, err
+	}
+
+	var feature *Feature
+	err = json.Unmarshal(featureBytes, &feature)
+	if err != nil {
+		return nil, err
+	}
+
+	return feature, nil
+}
+
 func (f *Feature) UpdateTestCount() error {
 	f.TestCount += 1
 	
@@ -28,9 +45,12 @@ func (f *Feature) UpdateTestCount() error {
 }
 
 func (f *Feature) Save() error {
-	workingDir, err := os.Getwd()
-	if err != nil {
-		return err
+	workingDir, GOGDir := GetWorkspacePaths()
+
+	if !PathExists(GOGDir) {
+		if err := os.MkdirAll(GOGDir, 0700); err != nil {
+			return err
+		}
 	}
 
 	featureFile, err := os.Create(workingDir + "/.gog/feature.json")

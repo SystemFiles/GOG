@@ -2,6 +2,7 @@ package lib
 
 import (
 	"os"
+	"os/exec"
 )
 
 func StringInSlice(slice []string, value string) (bool) {
@@ -21,4 +22,27 @@ func GetWorkspacePaths() (string, string) {
 	GOGDir := workingDir + "/.gog"
 
 	return workingDir, GOGDir
+}
+
+func PathExists(path string) bool {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+func CleanFeature(cwd string, feature *Feature) error {
+	if err := GitCheckoutDefaultBranch(); err != nil {
+		return err
+	}
+
+	cmd := exec.Command("git", "branch", "-D", feature.Jira)
+	_, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+
+	os.RemoveAll(cwd + "/.gog/")
+
+	return nil
 }
