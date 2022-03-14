@@ -59,7 +59,7 @@ func ExecFeature() {
 		os.Exit(1)
 	}
 
-	if lib.GitBranchExists(feature.Jira) {
+	if feature.BranchExists() {
 		lib.GetLogger().Error(fmt.Sprintf("There is already a branch in this repo named %s", feature.Jira))
 		os.Exit(1)
 	}
@@ -75,8 +75,9 @@ func ExecFeature() {
 	}
 
 	if !fromFeature {
-		if err := lib.GitCheckoutDefaultBranch(); err != nil {
+		if stderr, err := lib.GitCheckoutDefaultBranch(); err != nil {
 			lib.GetLogger().Error(fmt.Sprintf("Failed to checkout default branch for repo. %v", err))
+			lib.GetLogger().Error(stderr)
 			os.Exit(1)
 		}
 	}
@@ -86,8 +87,9 @@ func ExecFeature() {
 		os.Exit(1)
 	}
 
-	if err := lib.GitCreateBranch(feature.Jira, true); err != nil {
+	if stderr, err := feature.CreateBranch(true); err != nil {
 		lib.GetLogger().Error(fmt.Sprintf("Failed to create or checkout new feature branch, %s. %v", feature.Jira, err))
+		lib.GetLogger().Error(stderr)
 		os.Exit(1)
 	}
 

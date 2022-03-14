@@ -2,7 +2,9 @@ package lib
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"os/exec"
 )
 
 type Feature struct {
@@ -43,6 +45,34 @@ func (f *Feature) UpdateTestCount() error {
 
 	return nil
 }
+
+func (f *Feature) BranchExists() bool {
+	return GitBranchExists(f.Jira)
+}
+
+func (f *Feature) CreateBranch(checkout bool) (string, error) {
+	var stdout []byte
+	var err error
+	if checkout {
+		cmd := exec.Command("git", "checkout", "-b", f.Jira)
+		stdout, err = cmd.CombinedOutput()
+	} else {
+		cmd := exec.Command("git", "branch", f.Jira)
+		stdout, err = cmd.CombinedOutput()
+	}
+
+	return string(stdout), err
+}
+
+func (f *Feature) RemoteExists() bool {
+	remoteExistsCommand := fmt.Sprintf("git ls-remote --heads --exit-code | egrep %s", f.Jira)
+	cmd := exec.Command("bash", "-c", remoteExistsCommand)
+	_, err := cmd.Output()
+
+	return err == nil
+}
+
+
 
 func (f *Feature) Save() error {
 	workingDir, GOGDir := GetWorkspacePaths()
