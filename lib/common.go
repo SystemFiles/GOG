@@ -32,7 +32,7 @@ func PathExists(path string) bool {
 }
 
 func CleanFeature(cwd string, feature *Feature) error {
-	if err := GitCheckoutDefaultBranch(); err != nil {
+	if _, err := GitCheckoutDefaultBranch(); err != nil {
 		return err
 	}
 
