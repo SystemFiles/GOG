@@ -11,10 +11,10 @@ import (
 )
 
 func featureUsage() {
-	lib.GetLogger().Info("Usage: gog feature <jira_name> <comment>")
+	lib.GetLogger().Info("Usage: gog feature <jira_name> <comment> [-from-feature]")
 }
 
-func ExecFeature() {
+func ExecFeature(fromFeature bool) {
 	if len(flag.Args()) < 3 {
 		lib.GetLogger().Error("Invalid usage of gogfeature ...")
 		featureUsage()
@@ -23,7 +23,6 @@ func ExecFeature() {
 
 	jira := flag.Arg(1)
 	comment := strings.Join(flag.Args()[2:], " ")
-	fromFeature := *flag.Bool("from-feature", false, "specifies if this feature will be based on the a current feature branch")
 
 	if comment == "" {
 		comment = "Feature Branch"
@@ -39,7 +38,7 @@ func ExecFeature() {
 		os.Exit(1)
 	}
 
-	workingDir, GOGDir := lib.GetWorkspacePaths()
+	_, GOGDir := lib.GetWorkspacePaths()
 
 	feature, err := lib.NewFeature(jira, comment)
 	if err != nil {
@@ -65,7 +64,7 @@ func ExecFeature() {
 	}
 
 	if lib.GitHasUnstagedCommits() {
-		lib.GetLogger().Error(fmt.Sprintf("There is unstaged commits on your current branch (%s). For your safety, please stage or discard the changes to continue. %v", initial_branch, err))
+		lib.GetLogger().Error(fmt.Sprintf("There is unstaged commits on your current branch (%s). For your safety, please stage or discard the changes to continue.", initial_branch))
 		os.Exit(1)
 	}
 
@@ -95,7 +94,7 @@ func ExecFeature() {
 
 	if err := feature.Save(); err != nil {
 		lib.GetLogger().Error(fmt.Sprintf("Failed to create feature tracking file (%v) ... will exit cleanly", err))
-		if err := lib.CleanFeature(workingDir, feature); err != nil {
+		if err := lib.CleanFeature(feature); err != nil {
 			lib.GetLogger().Error(fmt.Sprintf("Failed to exit cleanly ... %v", err))
 		}
 		os.Exit(1)

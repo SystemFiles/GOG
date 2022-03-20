@@ -1,8 +1,11 @@
 package lib
 
 import (
+	"bufio"
 	"fmt"
 	"os/exec"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -98,4 +101,101 @@ func GitPushRemote(pushArgs string) (string, error) {
 	stderr, err := cmd.CombinedOutput()
 
 	return string(stderr), err
+}
+
+func GitPushRemoteTagsOnly() (string, error) {
+	cmd := exec.Command("git", "push", "--tags", "--force")
+	stderr, err := cmd.CombinedOutput()
+	
+	return string(stderr), err
+}
+
+func GitViewFeatureChanges(feature *Feature) ([]string, error) {
+	var changes []string
+	cmd := exec.Command("bash", "-c", fmt.Sprintf("git log --pretty=oneline --first-parent --format='`%%h` - %%s' | grep '%s'", feature.Jira))
+	stdout, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(string(stdout)))
+	for scanner.Scan() {
+		changes = append(changes, fmt.Sprintf("- %s", scanner.Text()))
+	}
+
+	return changes, nil
+}
+
+func GitOriginCurrentVersion() ([3]int, error) {
+	version := [3]int{0,0,0}
+
+	defaultBranch, err := GitOriginDefaultBranch()
+	if err != nil {
+		return version, err
+	}
+
+	tagCmd := exec.Command("bash", "-c", fmt.Sprintf("git tag --merged %s --sort=taggerdate | tail -r", defaultBranch))
+	tagOut, err := tagCmd.CombinedOutput()
+	if err != nil {
+		if strings.Contains(err.Error(), "128") {
+			return version, nil
+		}
+		
+		return version, err
+	}
+
+	semverRegex, err := regexp.Compile(`^([0-9])+\.([0-9])+\.([0-9])$`)
+	if err != nil {
+		return version, err
+	}
+
+	var latestTag string
+	tagScanner := bufio.NewScanner(strings.NewReader(string(tagOut)))
+	for tagScanner.Scan() {
+		tag := tagScanner.Text()
+		if matched := semverRegex.MatchString(tag); matched {
+			latestTag = tag
+			break
+		}
+	}
+
+	if latestTag == "" {
+		return version, nil
+	}
+
+	verElements := strings.Split(string(latestTag), ".")
+	major, err := strconv.Atoi(verElements[0])
+	if err != nil { return version, err }
+	minor, err := strconv.Atoi(verElements[1])
+	if err != nil { return version, err }
+	patch, err := strconv.Atoi(verElements[2])
+	if err != nil { return version, err }
+
+	version = [3]int{major, minor, patch}
+
+	return version, nil
+}
+
+func GitRebase(feature *Feature) (string, error) {
+	cmd := exec.Command("git", "rebase", feature.Jira)
+	stdout, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(stdout), err
+	}
+
+	return string(stdout), nil
+}
+
+func GitCreateReleaseTags(version string, feature *Feature) (string, error) {
+	tagCmd := exec.Command("git", "tag", "-a", version, "-m", fmt.Sprintf("(%s): %s %s", version, feature.Jira, feature.Comment))
+	stdout, err := tagCmd.CombinedOutput()
+	if err != nil {
+		return string(stdout), err
+	}
+
+	majorVersion := strings.Split(version, ".")[0] + ".x"
+	majorTagCmd := exec.Command("git", "tag", "-a", majorVersion, "--force", "-m", fmt.Sprintf("(%s): %s %s", majorVersion, feature.Jira, feature.Comment))
+	stdout, err = majorTagCmd.CombinedOutput()
+	
+	return string(stdout), err
 }
