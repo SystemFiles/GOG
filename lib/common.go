@@ -31,7 +31,9 @@ func PathExists(path string) bool {
 	return true
 }
 
-func CleanFeature(cwd string, feature *Feature) error {
+func CleanFeature(feature *Feature) error {
+	_, GOGDir := GetWorkspacePaths()
+
 	if _, err := GitCheckoutDefaultBranch(); err != nil {
 		return err
 	}
@@ -42,7 +44,31 @@ func CleanFeature(cwd string, feature *Feature) error {
 		return err
 	}
 
-	os.RemoveAll(cwd + "/.gog/")
+	if err := os.RemoveAll(GOGDir); err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func BumpVersion(currentVersion [3]int, major, minor, patch bool) ([3]int) {
+	if major {
+		currentVersion[0] += 1
+		currentVersion[1] = 0
+		currentVersion[2] = 0
+		return currentVersion
+	}
+
+	if minor {
+		currentVersion[1] += 1
+		currentVersion[2] = 0
+		return currentVersion
+	}
+
+	if patch {
+		currentVersion[2] += 1
+		return currentVersion
+	}
+
+	return [3]int{}
 }

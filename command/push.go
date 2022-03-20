@@ -14,7 +14,7 @@ func ExecPush() {
 	if len(flag.Args()) >= 2 {
 		message = strings.Join(flag.Args()[1:], " ")
 	}
-	workingDir, GOGDir := lib.GetWorkspacePaths()
+	workingDir, _ := lib.GetWorkspacePaths()
 
 	feature, err := lib.NewFeatureFromFile()
 	if err != nil {
@@ -24,13 +24,8 @@ func ExecPush() {
 	defer feature.Save()
 
 	if message == "" {
-		message = fmt.Sprintf("Feature Update (%d)", feature.TestCount)
+		message = fmt.Sprintf("%s Test Build (%d)", feature.Jira, feature.TestCount)
 		feature.UpdateTestCount()
-	}
-
-	if !lib.PathExists(GOGDir + "/feature.json") {
-		lib.GetLogger().Error(fmt.Sprintf("Could not find valid GOG feature in the working directory. %s does not exist", GOGDir))
-		os.Exit(1)
 	}
 
 	if stderr, err := lib.GitStageChanges(); err != nil {

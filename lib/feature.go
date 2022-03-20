@@ -10,7 +10,7 @@ import (
 type Feature struct {
 	Jira string `json:"jira"`
 	Comment string `json:"comment"`
-	TestCount int64 `json:"test_count"`
+	TestCount int `json:"test_count"`
 }
 
 func NewFeature(jira, comment string) (*Feature, error) {
@@ -60,6 +60,13 @@ func (f *Feature) CreateBranch(checkout bool) (string, error) {
 		cmd := exec.Command("git", "branch", f.Jira)
 		stdout, err = cmd.CombinedOutput()
 	}
+
+	return string(stdout), err
+}
+
+func (f *Feature) DeleteBranch() (string, error) {
+	cmd := exec.Command("git", "branch", "-D", f.Jira)
+	stdout, err := cmd.CombinedOutput()
 
 	return string(stdout), err
 }
