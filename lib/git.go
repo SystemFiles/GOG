@@ -110,7 +110,7 @@ func GitPushRemoteTagsOnly() (string, error) {
 	return string(stderr), err
 }
 
-func GitViewFeatureChanges(feature *Feature) ([]string, error) {
+func GitFeatureChanges(feature *Feature) ([]string, error) {
 	var changes []string
 	cmd := exec.Command("bash", "-c", fmt.Sprintf("git log --pretty=oneline --first-parent --format='`%%h` - %%s' | grep '%s'", feature.Jira))
 	stdout, err := cmd.CombinedOutput()

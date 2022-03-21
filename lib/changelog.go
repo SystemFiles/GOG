@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -10,34 +11,38 @@ import (
 func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
 	workingDir, _ := GetWorkspacePaths()
 
-	f, err := os.Create(workingDir + "/CHANGELOG.md")
+	f, err := os.OpenFile(workingDir + "/CHANGELOG.md", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return []string{}, err
 	}
 	defer f.Close()
 
-	var lines []byte
-	_, err = f.Read(lines)
-	if err != nil {
-		return []string{}, err
+	GetLogger().Debug("Creating changelog entry ...")
+
+	var changelogLines []string
+	scanner := bufio.NewScanner(bufio.NewReader(f))
+	for scanner.Scan() {
+		changelogLines = append(changelogLines, scanner.Text())
 	}
 
-	fmt.Println(*entry)
+	if len(changelogLines) > 0 {
+		GetLogger().Debug("CHANGELOG.md already exists ... will append new changelog entry")
 
-	changlogLines := strings.Split(string(lines), "\n")
-
-	fmt.Println(changlogLines, len(changlogLines))
-
-	if (len(changlogLines) - 1) > 0 {
-		GetLogger().Info("CHANGELOG already exists")
-
-		for _, line := range changlogLines {
+		var latestFeatIndex int
+		for i, line := range changelogLines {
 			if strings.Contains(line, "## [") {
-				GetLogger().Debug("Found start of existing CHANGELOG entry")
+				latestFeatIndex = i
+				break
 			}
 		}
+
+		existingChanges := changelogLines[latestFeatIndex:]
+		changelogLines = append(changelogLines[:latestFeatIndex-1], entry.String())
+		changelogLines = append(changelogLines, existingChanges...)
+
+		return changelogLines, nil
 	} else {
-		changlogLines = append(changlogLines,
+		changelogLines = append(changelogLines,
 `
 # Changelog
 All notable changes to this project will be documented in this file.
@@ -48,12 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 `)
-
-		GetLogger().Info("Creating changelog")
-		changlogLines = append(changlogLines, entry.String())
+		changelogLines = append(changelogLines, entry.String())
 	}
 
-	return changlogLines, nil
+	return changelogLines, nil
 }
 
 func WriteChangelogToFile(lines []string) error {
@@ -102,12 +105,13 @@ func (e *ChangelogEntry) String() string {
 		lines = append(lines, "\n### Changed\n")
 	}
 
-	changes, err := GitViewFeatureChanges(e.Feature)
+	changes, err := GitFeatureChanges(e.Feature)
 	if err != nil {
-		panic("Failed to get feature changes from git")
+		GetLogger().Fatal(fmt.Sprintf("Failed to get feature changes from git. %v", err))
 	}
 
 	lines = append(lines, changes...)
+	lines = append(lines, "\n\n")
 	
 	return strings.Join(lines, "\n")
 }
