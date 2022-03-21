@@ -38,8 +38,6 @@ func ExecFinish(major, minor, patch bool) {
 		os.Exit(1)
 	}
 
-	fmt.Println(changelogLines)
-
 	if err := lib.WriteChangelogToFile(changelogLines); err != nil {
 		lib.GetLogger().Error(fmt.Sprintf("Failed to write changelog entry. %v", err))
 		os.Exit(1)
@@ -56,7 +54,7 @@ func ExecFinish(major, minor, patch bool) {
 		os.Exit(1)
 	}
 
-	if stderr, err := lib.GitCommitChanges(feature, fmt.Sprintf("%s Final changes", feature.Jira)); err != nil {
+	if stderr, err := lib.GitCommitChanges(feature, feature.Comment); err != nil {
 		lib.GetLogger().Error(fmt.Sprintf("Failed to commit changes to local project repo. %v", err))
 		lib.GetLogger().Error(stderr)
 		os.Exit(1)
