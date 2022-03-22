@@ -186,3 +186,27 @@ func GitCreateReleaseTags(version semver.Semver, feature *Feature) (string, erro
 	
 	return string(stdout), err
 }
+
+func GitPublishChanges(feature *Feature, commitMessage string) (string, error) {
+	if stderr, err := GitStageChanges(); err != nil {
+		return stderr, err
+	}
+
+	if stderr, err := GitCommitChanges(feature, commitMessage); err != nil {
+		return stderr, err
+	}
+
+	var pushArgs string
+	if !feature.RemoteExists() {
+		pushArgs = fmt.Sprintf("--set-upstream origin %s", feature.Jira)
+	} else {
+		// only pull changes if a remote exists
+		if stderr, err := GitPullChanges(); err != nil {
+			return stderr, err
+		}
+	}
+
+	stderr, err := GitPushRemote(pushArgs)
+
+	return stderr, err
+}

@@ -29,7 +29,7 @@ func (s Semver) BumpMajor() Semver {
 
 func (s Semver) BumpMinor() Semver {
 	s[1] += 1
-	s[0] = 0
+	s[2] = 0
 	return s
 }
 

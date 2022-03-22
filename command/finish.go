@@ -67,37 +67,11 @@ func ExecFinish(versionLevel semver.UpdateLevel) {
 		os.Exit(1)
 	}
 
-	if stderr, err := lib.GitStageChanges(); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to stage existing changes. %v", err))
+	if stderr, err := lib.GitPublishChanges(feature, feature.Comment); err != nil {
+		lib.GetLogger().Error(fmt.Sprintf("Failed to publish changes to remote repository. %v", err))
 		lib.GetLogger().Error(stderr)
 		os.Exit(1)
 	}
-
-	if stderr, err := lib.GitCommitChanges(feature, feature.Comment); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to commit changes to local project repo. %v", err))
-		lib.GetLogger().Error(stderr)
-		os.Exit(1)
-	}
-
-	var pushArgs string
-	if !feature.RemoteExists() {
-		pushArgs = fmt.Sprintf("--set-upstream origin %s", feature.Jira)
-	} else {
-		// only pull changes if a remote exists
-		if stderr, err := lib.GitPullChanges(); err != nil {
-			lib.GetLogger().Error(fmt.Sprintf("Failed to pull changes from remote before push. %v", err))
-			lib.GetLogger().Error(stderr)
-			os.Exit(1)
-		}
-	}
-
-	if stderr, err := lib.GitPushRemote(pushArgs); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to push changes to remote HEAD. %v", err))
-		lib.GetLogger().Error(stderr)
-		os.Exit(1)
-	}
-
-	lib.GetLogger().Info("Successfully pushed changes to remote feature!")
 
 	stderr, err := lib.GitCheckoutDefaultBranch()
 	if err != nil {

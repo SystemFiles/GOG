@@ -89,7 +89,11 @@ func ExecFeature(jira, comment string, fromFeature bool) {
 		os.Exit(1)
 	}
 
-	ExecPush(fmt.Sprintf("%s Init Feature", feature.Jira))
+	if stderr, err := lib.GitPublishChanges(feature, "Initialize Feature"); err != nil {
+		lib.GetLogger().Error(fmt.Sprintf("Failed to publish changes to remote repository. %v", err))
+		lib.GetLogger().Error(stderr)
+		os.Exit(1)
+	}
 
 	lib.GetLogger().Info(fmt.Sprintf("Successfully created feature %s!", jira))
 }
