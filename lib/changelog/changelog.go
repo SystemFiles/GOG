@@ -108,7 +108,7 @@ func (e *ChangelogEntry) String() string {
 		lines = append(lines, "\n### Changed\n")
 	}
 
-	changes, err := lib.GitFeatureChanges(e.Feature)
+	changes, err := e.Feature.ListChanges()
 	if err != nil {
 		lib.GetLogger().Fatal(fmt.Sprintf("Failed to get feature changes from git. %v", err))
 	}

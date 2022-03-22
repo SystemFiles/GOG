@@ -1,10 +1,14 @@
 package lib
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
+
+	"sykesdev.ca/gog/lib/semver"
 )
 
 type Feature struct {
@@ -82,6 +86,69 @@ func (f *Feature) RemoteExists() bool {
 	_, err := cmd.Output()
 
 	return err == nil
+}
+
+func (f *Feature) PushChanges(commitMessage string) (string, error) {
+	if stderr, err := GitStageChanges(); err != nil {
+		return stderr, err
+	}
+
+	if stderr, err := GitCommitChanges(f, commitMessage); err != nil {
+		return stderr, err
+	}
+
+	var pushArgs string
+	if !f.RemoteExists() {
+		pushArgs = fmt.Sprintf("--set-upstream origin %s", f.Jira)
+	} else {
+		// only pull changes if a remote exists
+		if stderr, err := GitPullChanges(); err != nil {
+			return stderr, err
+		}
+	}
+
+	stderr, err := GitPushRemote(pushArgs)
+
+	return stderr, err
+}
+
+func (f *Feature) CreateReleaseTags(version semver.Semver) (string, error) {
+	tagCmd := exec.Command("git", "tag", "-a", version.String(), "-m", fmt.Sprintf("(%s): %s %s", version, f.Jira, f.Comment))
+	stdout, err := tagCmd.CombinedOutput()
+	if err != nil {
+		return string(stdout), err
+	}
+
+	majorTagCmd := exec.Command("git", "tag", "-a", version.Major(), "--force", "-m", fmt.Sprintf("(%s): %s %s", version.Major(), f.Jira, f.Comment))
+	stdout, err = majorTagCmd.CombinedOutput()
+	
+	return string(stdout), err
+}
+
+func (f *Feature) Rebase() (string, error) {
+	cmd := exec.Command("git", "rebase", f.Jira)
+	stdout, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(stdout), err
+	}
+
+	return string(stdout), nil
+}
+
+func (f *Feature) ListChanges() ([]string, error) {
+	var changes []string
+	cmd := exec.Command("bash", "-c", fmt.Sprintf("git log --pretty=oneline --first-parent --format='`%%h` - %%s' | grep '%s'", f.Jira))
+	stdout, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(string(stdout)))
+	for scanner.Scan() {
+		changes = append(changes, fmt.Sprintf("- %s", scanner.Text()))
+	}
+
+	return changes, nil
 }
 
 func (f *Feature) Save() error {

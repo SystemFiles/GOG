@@ -31,8 +31,8 @@ func ExecPush(message string) {
 		feature.UpdateTestCount()
 	}
 
-	if stderr, err := lib.GitPublishChanges(feature, message); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to publish changes to remote repository. %v", err))
+	if stderr, err := feature.PushChanges(message); err != nil {
+		lib.GetLogger().Error(fmt.Sprintf("Failed to push changes to remote repository. %v", err))
 		lib.GetLogger().Error(stderr)
 		os.Exit(1)
 	}

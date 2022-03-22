@@ -108,22 +108,6 @@ func GitPushRemoteTagsOnly() (string, error) {
 	return string(stderr), err
 }
 
-func GitFeatureChanges(feature *Feature) ([]string, error) {
-	var changes []string
-	cmd := exec.Command("bash", "-c", fmt.Sprintf("git log --pretty=oneline --first-parent --format='`%%h` - %%s' | grep '%s'", feature.Jira))
-	stdout, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, err
-	}
-
-	scanner := bufio.NewScanner(strings.NewReader(string(stdout)))
-	for scanner.Scan() {
-		changes = append(changes, fmt.Sprintf("- %s", scanner.Text()))
-	}
-
-	return changes, nil
-}
-
 func GitOriginCurrentVersion() (semver.Semver, error) {
 	version := semver.Semver{0,0,0}
 
@@ -162,51 +146,4 @@ func GitOriginCurrentVersion() (semver.Semver, error) {
 	}
 
 	return semver.Parse(latestTag), nil
-}
-
-func GitRebase(feature *Feature) (string, error) {
-	cmd := exec.Command("git", "rebase", feature.Jira)
-	stdout, err := cmd.CombinedOutput()
-	if err != nil {
-		return string(stdout), err
-	}
-
-	return string(stdout), nil
-}
-
-func GitCreateReleaseTags(version semver.Semver, feature *Feature) (string, error) {
-	tagCmd := exec.Command("git", "tag", "-a", version.String(), "-m", fmt.Sprintf("(%s): %s %s", version, feature.Jira, feature.Comment))
-	stdout, err := tagCmd.CombinedOutput()
-	if err != nil {
-		return string(stdout), err
-	}
-
-	majorTagCmd := exec.Command("git", "tag", "-a", version.Major(), "--force", "-m", fmt.Sprintf("(%s): %s %s", version.Major(), feature.Jira, feature.Comment))
-	stdout, err = majorTagCmd.CombinedOutput()
-	
-	return string(stdout), err
-}
-
-func GitPublishChanges(feature *Feature, commitMessage string) (string, error) {
-	if stderr, err := GitStageChanges(); err != nil {
-		return stderr, err
-	}
-
-	if stderr, err := GitCommitChanges(feature, commitMessage); err != nil {
-		return stderr, err
-	}
-
-	var pushArgs string
-	if !feature.RemoteExists() {
-		pushArgs = fmt.Sprintf("--set-upstream origin %s", feature.Jira)
-	} else {
-		// only pull changes if a remote exists
-		if stderr, err := GitPullChanges(); err != nil {
-			return stderr, err
-		}
-	}
-
-	stderr, err := GitPushRemote(pushArgs)
-
-	return stderr, err
 }

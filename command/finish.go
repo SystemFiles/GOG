@@ -67,8 +67,8 @@ func ExecFinish(versionLevel semver.UpdateLevel) {
 		os.Exit(1)
 	}
 
-	if stderr, err := lib.GitPublishChanges(feature, feature.Comment); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to publish changes to remote repository. %v", err))
+	if stderr, err := feature.PushChanges(feature.Comment); err != nil {
+		lib.GetLogger().Error(fmt.Sprintf("Failed to push changes to remote repository. %v", err))
 		lib.GetLogger().Error(stderr)
 		os.Exit(1)
 	}
@@ -80,13 +80,13 @@ func ExecFinish(versionLevel semver.UpdateLevel) {
 		os.Exit(1)
 	}
 
-	if stderr, err := lib.GitRebase(feature); err != nil {
+	if stderr, err := feature.Rebase(); err != nil {
 		lib.GetLogger().Error(fmt.Sprintf("Failed to rebase commits into new release. %v", err))
 		lib.GetLogger().Error(stderr)
 		os.Exit(1)
 	}
 
-	if stderr, err := lib.GitCreateReleaseTags(updatedVersion, feature); err != nil {
+	if stderr, err := feature.CreateReleaseTags(updatedVersion); err != nil {
 		lib.GetLogger().Error(fmt.Sprintf("Failed to create release tags. %v", err))
 		lib.GetLogger().Error(stderr)
 		os.Exit(1)
