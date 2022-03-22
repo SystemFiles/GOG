@@ -93,23 +93,25 @@ func (f *Feature) PushChanges(commitMessage string) (string, error) {
 		return stderr, err
 	}
 
-	if stderr, err := GitCommitChanges(f, commitMessage); err != nil {
-		return stderr, err
-	}
-
-	var pushArgs string
-	if !f.RemoteExists() {
-		pushArgs = fmt.Sprintf("--set-upstream origin %s", f.Jira)
-	} else {
-		// only pull changes if a remote exists
-		if stderr, err := GitPullChanges(); err != nil {
+	if GitHasUncommittedChanges() {
+		if stderr, err := GitCommitChanges(f, commitMessage); err != nil {
 			return stderr, err
 		}
+
+		var pushArgs string
+		if !f.RemoteExists() {
+			pushArgs = fmt.Sprintf("--set-upstream origin %s", f.Jira)
+		} else {
+			// only pull changes if a remote exists
+			if stderr, err := GitPullChanges(); err != nil {
+				return stderr, err
+			}
+		}
+
+		return GitPushRemote(pushArgs)
 	}
 
-	stderr, err := GitPushRemote(pushArgs)
-
-	return stderr, err
+	return "", nil
 }
 
 func (f *Feature) CreateReleaseTags(version semver.Semver) (string, error) {

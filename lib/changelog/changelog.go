@@ -11,6 +11,17 @@ import (
 	"sykesdev.ca/gog/lib/semver"
 )
 
+const changelogHeader = `
+# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+
+
+`
+
 func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
 	workingDir, _ := lib.WorkspacePaths()
 
@@ -28,34 +39,22 @@ func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
 		changelogLines = append(changelogLines, scanner.Text())
 	}
 
-	if len(changelogLines) > 0 {
-		lib.GetLogger().Debug("CHANGELOG.md already exists ... will append new changelog entry")
-
-		var latestFeatIndex int
-		for i, line := range changelogLines {
-			if strings.Contains(line, "## [") {
-				latestFeatIndex = i
-				break
-			}
+	latestFeatIndex := 0
+	for i, line := range changelogLines {
+		if strings.Contains(line, "## [") {
+			latestFeatIndex = i
+			break
 		}
+	}
 
-		existingChanges := changelogLines[latestFeatIndex:]
+	// If CHANGELOG is malformed, rewrite the file
+	var existingChanges []string
+	if latestFeatIndex != 0 {
+		existingChanges = changelogLines[latestFeatIndex:]
 		changelogLines = append(changelogLines[:latestFeatIndex-1], entry.String())
 		changelogLines = append(changelogLines, existingChanges...)
-
-		return changelogLines, nil
 	} else {
-		changelogLines = append(changelogLines,
-`
-# Changelog
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-
-
-`)
+		changelogLines = append([]string{}, changelogHeader)
 		changelogLines = append(changelogLines, entry.String())
 	}
 
