@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os/exec"
 	"regexp"
-	"strconv"
 	"strings"
+
+	"sykesdev.ca/gog/lib/semver"
 )
 
 func GitHasUnstagedCommits() bool {
@@ -40,11 +41,8 @@ func GitBranchExists(branch string) bool {
 func GitGetCurrentBranch() (string, error) {
 	cmd := exec.Command("bash", "-c", "git branch | grep '*' | cut -d' ' -f2")
 	stdout, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", err
-	}
 
-	return string(stdout), nil
+	return string(stdout), err
 }
 
 func GitPullChanges() (string, error) {
@@ -126,8 +124,8 @@ func GitFeatureChanges(feature *Feature) ([]string, error) {
 	return changes, nil
 }
 
-func GitOriginCurrentVersion() ([3]int, error) {
-	version := [3]int{0,0,0}
+func GitOriginCurrentVersion() (semver.Semver, error) {
+	version := semver.Semver{0,0,0}
 
 	defaultBranch, err := GitOriginDefaultBranch()
 	if err != nil {
@@ -163,17 +161,7 @@ func GitOriginCurrentVersion() ([3]int, error) {
 		return version, nil
 	}
 
-	verElements := strings.Split(string(latestTag), ".")
-	major, err := strconv.Atoi(verElements[0])
-	if err != nil { return version, err }
-	minor, err := strconv.Atoi(verElements[1])
-	if err != nil { return version, err }
-	patch, err := strconv.Atoi(verElements[2])
-	if err != nil { return version, err }
-
-	version = [3]int{major, minor, patch}
-
-	return version, nil
+	return semver.Parse(latestTag), nil
 }
 
 func GitRebase(feature *Feature) (string, error) {
@@ -186,15 +174,14 @@ func GitRebase(feature *Feature) (string, error) {
 	return string(stdout), nil
 }
 
-func GitCreateReleaseTags(version string, feature *Feature) (string, error) {
-	tagCmd := exec.Command("git", "tag", "-a", version, "-m", fmt.Sprintf("(%s): %s %s", version, feature.Jira, feature.Comment))
+func GitCreateReleaseTags(version semver.Semver, feature *Feature) (string, error) {
+	tagCmd := exec.Command("git", "tag", "-a", version.String(), "-m", fmt.Sprintf("(%s): %s %s", version, feature.Jira, feature.Comment))
 	stdout, err := tagCmd.CombinedOutput()
 	if err != nil {
 		return string(stdout), err
 	}
 
-	majorVersion := strings.Split(version, ".")[0] + ".x"
-	majorTagCmd := exec.Command("git", "tag", "-a", majorVersion, "--force", "-m", fmt.Sprintf("(%s): %s %s", majorVersion, feature.Jira, feature.Comment))
+	majorTagCmd := exec.Command("git", "tag", "-a", version.Major(), "--force", "-m", fmt.Sprintf("(%s): %s %s", version.Major(), feature.Jira, feature.Comment))
 	stdout, err = majorTagCmd.CombinedOutput()
 	
 	return string(stdout), err

@@ -20,7 +20,7 @@ func NewFeature(jira, comment string) (*Feature, error) {
 }
 
 func NewFeatureFromFile() (*Feature, error) {
-	_, GOGDir := GetWorkspacePaths()
+	_, GOGDir := WorkspacePaths()
 	
 	featureBytes, err := os.ReadFile(GOGDir + "/feature.json")
 	if err != nil {
@@ -50,25 +50,30 @@ func (f *Feature) BranchExists() bool {
 	return GitBranchExists(f.Jira)
 }
 
-func (f *Feature) CreateBranch(checkout bool) (string, error) {
-	var stdout []byte
-	var err error
-	if checkout {
-		cmd := exec.Command("git", "checkout", "-b", f.Jira)
-		stdout, err = cmd.CombinedOutput()
-	} else {
-		cmd := exec.Command("git", "branch", f.Jira)
-		stdout, err = cmd.CombinedOutput()
-	}
+func (f *Feature) CreateBranch() (string, error) {
+	cmd := exec.Command("git", "checkout", "-b", f.Jira)
+	stdout, err := cmd.CombinedOutput()
 
 	return string(stdout), err
 }
 
 func (f *Feature) DeleteBranch() (string, error) {
-	cmd := exec.Command("git", "branch", "-D", f.Jira)
-	stdout, err := cmd.CombinedOutput()
+	if cbStdout, err := GitGetCurrentBranch(); cbStdout == f.Jira {
+		GitCheckoutDefaultBranch()
+	} else if err != nil {
+		return cbStdout, err
+	}
 
-	return string(stdout), err
+	cmdLocal := exec.Command("git", "branch", "-D", f.Jira)
+	localStdout, err := cmdLocal.CombinedOutput()
+	if err != nil {
+		return string(localStdout), err
+	}
+
+	cmdRemote := exec.Command("git", "push", "origin", "--delete", f.Jira)
+	remoteStdout, err := cmdRemote.CombinedOutput()
+	
+	return string(remoteStdout), err
 }
 
 func (f *Feature) RemoteExists() bool {
@@ -79,10 +84,8 @@ func (f *Feature) RemoteExists() bool {
 	return err == nil
 }
 
-
-
 func (f *Feature) Save() error {
-	workingDir, GOGDir := GetWorkspacePaths()
+	workingDir, GOGDir := WorkspacePaths()
 
 	if !PathExists(GOGDir) {
 		if err := os.MkdirAll(GOGDir, 0700); err != nil {

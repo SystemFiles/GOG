@@ -1,20 +1,23 @@
 package command
 
 import (
-	"flag"
 	"fmt"
 	"os"
-	"strings"
 
 	"sykesdev.ca/gog/lib"
 )
 
-func ExecPush() {
-	var message string
-	if len(flag.Args()) >= 2 {
-		message = strings.Join(flag.Args()[1:], " ")
+func PushUsage() {
+	lib.GetLogger().Info("Usage: gog push [message ...]")
+}
+
+func ExecPush(message string) {
+	workingDir, _ := lib.WorkspacePaths()
+
+	if !lib.GitIsValidRepo() {
+		lib.GetLogger().Error(fmt.Sprintf("The current directory (%s) is not a valid git repository", workingDir))
+		os.Exit(1)
 	}
-	workingDir, _ := lib.GetWorkspacePaths()
 
 	feature, err := lib.NewFeatureFromFile()
 	if err != nil {
@@ -22,7 +25,7 @@ func ExecPush() {
 		os.Exit(1)
 	}
 	defer feature.Save()
-
+	
 	if message == "" {
 		message = fmt.Sprintf("%s Test Build (%d)", feature.Jira, feature.TestCount)
 		feature.UpdateTestCount()

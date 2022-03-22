@@ -1,4 +1,4 @@
-package lib
+package changelog
 
 import (
 	"bufio"
@@ -6,10 +6,13 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"sykesdev.ca/gog/lib"
+	"sykesdev.ca/gog/lib/semver"
 )
 
 func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
-	workingDir, _ := GetWorkspacePaths()
+	workingDir, _ := lib.WorkspacePaths()
 
 	f, err := os.OpenFile(workingDir + "/CHANGELOG.md", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
@@ -17,7 +20,7 @@ func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
 	}
 	defer f.Close()
 
-	GetLogger().Debug("Creating changelog entry ...")
+	lib.GetLogger().Debug("Creating changelog entry ...")
 
 	var changelogLines []string
 	scanner := bufio.NewScanner(bufio.NewReader(f))
@@ -26,7 +29,7 @@ func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
 	}
 
 	if len(changelogLines) > 0 {
-		GetLogger().Debug("CHANGELOG.md already exists ... will append new changelog entry")
+		lib.GetLogger().Debug("CHANGELOG.md already exists ... will append new changelog entry")
 
 		var latestFeatIndex int
 		for i, line := range changelogLines {
@@ -60,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 }
 
 func WriteChangelogToFile(lines []string) error {
-	workingDir, _ := GetWorkspacePaths()
+	workingDir, _ := lib.WorkspacePaths()
 
 	changelogFile, err := os.Create(workingDir + "/CHANGELOG.md")
 	if err != nil {
@@ -77,12 +80,12 @@ func WriteChangelogToFile(lines []string) error {
 }
 
 type ChangelogEntry struct {
-	Feature *Feature
-	Version string
+	Feature *lib.Feature
+	Version semver.Semver
 	Added bool
 }
 
-func NewChangelogEntry(feature *Feature, version string, added bool) (*ChangelogEntry) {
+func NewChangelogEntry(feature *lib.Feature, version semver.Semver, added bool) (*ChangelogEntry) {
 	return &ChangelogEntry{ Feature: feature, Version: version, Added: added }
 }
 
@@ -105,9 +108,9 @@ func (e *ChangelogEntry) String() string {
 		lines = append(lines, "\n### Changed\n")
 	}
 
-	changes, err := GitFeatureChanges(e.Feature)
+	changes, err := lib.GitFeatureChanges(e.Feature)
 	if err != nil {
-		GetLogger().Fatal(fmt.Sprintf("Failed to get feature changes from git. %v", err))
+		lib.GetLogger().Fatal(fmt.Sprintf("Failed to get feature changes from git. %v", err))
 	}
 
 	lines = append(lines, changes...)

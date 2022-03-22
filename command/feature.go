@@ -1,29 +1,18 @@
 package command
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 
 	"sykesdev.ca/gog/lib"
 )
 
-func featureUsage() {
+func FeatureUsage() {
 	lib.GetLogger().Info("Usage: gog feature <jira_name> <comment> [-from-feature]")
 }
 
-func ExecFeature(fromFeature bool) {
-	if len(flag.Args()) < 3 {
-		lib.GetLogger().Error("Invalid usage of gogfeature ...")
-		featureUsage()
-		os.Exit(2)
-	}
-
-	jira := flag.Arg(1)
-	comment := strings.Join(flag.Args()[2:], " ")
-
+func ExecFeature(jira, comment string, fromFeature bool) {
 	if comment == "" {
 		comment = "Feature Branch"
 	}
@@ -38,17 +27,17 @@ func ExecFeature(fromFeature bool) {
 		os.Exit(1)
 	}
 
-	_, GOGDir := lib.GetWorkspacePaths()
+	workingDir, GOGDir := lib.WorkspacePaths()
+
+	if !lib.GitIsValidRepo() {
+		lib.GetLogger().Error(fmt.Sprintf("The current directory (%s) is not a valid git repository", workingDir))
+		os.Exit(1)
+	}
 
 	feature, err := lib.NewFeature(jira, comment)
 	if err != nil {
 		lib.GetLogger().Error("Failed to create feature")
 		lib.GetLogger().Error(fmt.Sprintf("Reason: %v", err))
-		os.Exit(1)
-	}
-
-	if !lib.GitIsValidRepo() {
-		lib.GetLogger().Error("The current directory does not contain a valid git repo ...")
 		os.Exit(1)
 	}
 
@@ -86,7 +75,7 @@ func ExecFeature(fromFeature bool) {
 		os.Exit(1)
 	}
 
-	if stderr, err := feature.CreateBranch(true); err != nil {
+	if stderr, err := feature.CreateBranch(); err != nil {
 		lib.GetLogger().Error(fmt.Sprintf("Failed to create or checkout new feature branch, %s. %v", feature.Jira, err))
 		lib.GetLogger().Error(stderr)
 		os.Exit(1)
@@ -99,6 +88,8 @@ func ExecFeature(fromFeature bool) {
 		}
 		os.Exit(1)
 	}
+
+	ExecPush(fmt.Sprintf("%s Init Feature", feature.Jira))
 
 	lib.GetLogger().Info(fmt.Sprintf("Successfully created feature %s!", jira))
 }

@@ -3,17 +3,36 @@ package command
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"sykesdev.ca/gog/lib"
+	"sykesdev.ca/gog/lib/changelog"
+	"sykesdev.ca/gog/lib/semver"
 )
 
-func ExecFinish(major, minor, patch bool) {
-	_, GOGDir := lib.GetWorkspacePaths()
+func bumpReleaseVersion(currentVersion semver.Semver, level semver.UpdateLevel) (semver.Semver) {
 
-	if !major && !minor && !patch {
-		lib.GetLogger().Error("You must specifiy exactly one of (-major, -minor, -patch) to create a new release")
-		os.Exit(2)
+	switch level {
+	case "MAJOR":
+		return currentVersion.BumpMajor()
+	case "MINOR":
+		return currentVersion.BumpMinor()
+	case "PATCH":
+		return currentVersion.BumpPatch()
+	default:
+		return currentVersion
+	}
+}
+
+func FinishUsage() {
+	lib.GetLogger().Info("Usage: gog finish (-major || -minor || -patch)")
+}
+
+func ExecFinish(versionLevel semver.UpdateLevel) {
+	workingDir, GOGDir := lib.WorkspacePaths()
+
+	if !lib.GitIsValidRepo() {
+		lib.GetLogger().Error(fmt.Sprintf("The current directory (%s) is not a valid git repository", workingDir))
+		os.Exit(1)
 	}
 
 	feature, err := lib.NewFeatureFromFile()
@@ -28,17 +47,17 @@ func ExecFinish(major, minor, patch bool) {
 		os.Exit(1)
 	}
 
-	updatedVersion := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(lib.BumpVersion(currentVersion, major, minor, patch))), "."), "[]")
+	updatedVersion := bumpReleaseVersion(currentVersion, versionLevel)
 	
-	changelogEntry := lib.NewChangelogEntry(feature, updatedVersion, major)
+	changelogEntry := changelog.NewChangelogEntry(feature, updatedVersion, versionLevel == "MAJOR")
 
-	changelogLines, err := lib.CreateChangeLogLines(changelogEntry)
+	changelogLines, err := changelog.CreateChangeLogLines(changelogEntry)
 	if err != nil {
 		lib.GetLogger().Error(fmt.Sprintf("Failed to update the changelog. %v", err))
 		os.Exit(1)
 	}
 
-	if err := lib.WriteChangelogToFile(changelogLines); err != nil {
+	if err := changelog.WriteChangelogToFile(changelogLines); err != nil {
 		lib.GetLogger().Error(fmt.Sprintf("Failed to write changelog entry. %v", err))
 		os.Exit(1)
 	}
