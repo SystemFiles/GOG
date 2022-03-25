@@ -1,7 +1,9 @@
 package semver
 
 import (
+	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -10,12 +12,17 @@ type UpdateLevel string
 type Semver [3]int
 
 func Parse(versionString string) (Semver) {
+	if matched, _ := regexp.Match(`^(v)?([0-9])+\.([0-9])+\.([0-9])+$`, []byte(versionString)); !matched {
+		panic(errors.New("cannot parse version string since it is not in a valid semver format"))
+	}
+
+	numReg := regexp.MustCompile(`[0-9]+`)
 	elements := strings.Split(string(versionString), ".")
-	major, err := strconv.Atoi(elements[0])
+	major, err := strconv.Atoi(numReg.FindString(elements[0]))
 	if err != nil { major = 0 }
-	minor, err := strconv.Atoi(elements[1])
+	minor, err := strconv.Atoi(numReg.FindString(elements[1]))
 	if err != nil { minor = 0 }
-	patch, err := strconv.Atoi(elements[2])
+	patch, err := strconv.Atoi(numReg.FindString(elements[2]))
 	if err != nil { patch = 0 }
 
 	return [3]int{major, minor, patch}

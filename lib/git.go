@@ -126,7 +126,7 @@ func GitOriginCurrentVersion() (semver.Semver, error) {
 		return version, err
 	}
 
-	semverRegex, err := regexp.Compile(`^([0-9])+\.([0-9])+\.([0-9])$`)
+	semverRegex, err := regexp.Compile(`^(v)?([0-9])+\.([0-9])+\.([0-9])+$`)
 	if err != nil {
 		return version, err
 	}

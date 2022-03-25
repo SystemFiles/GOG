@@ -71,7 +71,7 @@ func main() {
 		switch subCmd {
 		case subcommands[0]:
 			featureCmd := flag.NewFlagSet("feature", flag.ExitOnError)
-			fromFeature := featureCmd.Bool("from-feature", false, "-from-feature specifies if this feature will be based on the a current feature branch")
+			fromFeature := featureCmd.Bool("from-feature", false, "specifies if this feature will be based on the a current feature branch")
 			featureCmd.Parse(os.Args[2:])
 
 			gogFeature(*fromFeature)
@@ -80,9 +80,9 @@ func main() {
 		case subcommands[2]:
 			finishCmd := flag.NewFlagSet("finish", flag.ExitOnError)
 
-			major := finishCmd.Bool("major", false, "-major specifies that this is a major feature (breaking changes)")
-			minor := finishCmd.Bool("minor", false, "-minor specifies that this is a minor feature (no breaking, but is not a bug fix or patch)")
-			patch := finishCmd.Bool("patch", false, "-patch specifies this is a bugfix or small patch/update")
+			major := finishCmd.Bool("major", false, "specifies that this is a major feature (breaking changes)")
+			minor := finishCmd.Bool("minor", false, "specifies that this is a minor feature (no breaking, but is not a bug fix or patch)")
+			patch := finishCmd.Bool("patch", false, "specifies this is a bugfix or small patch/update")
 
 			finishCmd.Parse(os.Args[2:])
 
