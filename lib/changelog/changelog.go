@@ -99,7 +99,7 @@ func (e *ChangelogEntry) String() string {
 		currentTime.Second())
 	var lines []string
 	lines = append(lines, fmt.Sprintf("## [ %s ] - %s", e.Version, formattedTimeString))
-	lines = append(lines, fmt.Sprintf("\n> %s =-= %s", e.Feature.Jira, e.Feature.Comment))
+	lines = append(lines, fmt.Sprintf("\n> %s %s", e.Feature.Jira, e.Feature.Comment))
 
 	if e.Added {
 		lines = append(lines, "\n### Added\n")
