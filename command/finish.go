@@ -1,6 +1,8 @@
 package command
 
 import (
+	"errors"
+	"flag"
 	"fmt"
 	"os"
 
@@ -9,9 +11,11 @@ import (
 	"sykesdev.ca/gog/lib/semver"
 )
 
-func bumpReleaseVersion(currentVersion semver.Semver, level semver.UpdateLevel) (semver.Semver) {
+type FinishAction string
 
-	switch level {
+func bumpReleaseVersion(currentVersion semver.Semver, action FinishAction) (semver.Semver) {
+
+	switch action {
 	case "MAJOR":
 		return currentVersion.BumpMajor()
 	case "MINOR":
@@ -23,92 +27,116 @@ func bumpReleaseVersion(currentVersion semver.Semver, level semver.UpdateLevel) 
 	}
 }
 
-func FinishUsage() {
-	lib.GetLogger().Info("Usage: gog finish (-major || -minor || -patch)")
+type FinishCommand struct {
+	fs *flag.FlagSet
+
+	name string
+	action FinishAction
+
+	major bool
+	minor bool
+	patch bool
 }
 
-func ExecFinish(versionLevel semver.UpdateLevel) {
+func NewFinishCommand() *FinishCommand {
+	fc := &FinishCommand{
+		name: "finish",
+		fs: flag.NewFlagSet("finish", flag.ContinueOnError),
+	}
+
+	fc.fs.BoolVar(&fc.major, "major", false, "specifies that this is a major feature (breaking changes)")
+	fc.fs.BoolVar(&fc.minor, "minor", false, "specifies that this is a minor feature (no breaking, but is not a bug fix or patch)")
+	fc.fs.BoolVar(&fc.patch, "patch", false, "specifies this is a bugfix or small patch/update")
+
+	return fc
+}
+
+func (fc *FinishCommand) Init(args []string) error {
+	err := fc.fs.Parse(args)
+
+	if fc.major {
+		fc.action = "MAJOR"
+	} else if fc.minor {
+		fc.action = "MINOR"
+	} else if fc.patch {
+		fc.action = "PATCH"
+	}
+
+	return err
+}
+
+func (fc *FinishCommand) Run() error {
 	workingDir, GOGDir := lib.WorkspacePaths()
 
+	if fc.action == "" {
+		return errors.New("invalid usage of finish sub-command")
+	}
+
 	if !lib.GitIsValidRepo() {
-		lib.GetLogger().Error(fmt.Sprintf("The current directory (%s) is not a valid git repository", workingDir))
-		os.Exit(1)
+		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)
 	}
 
 	feature, err := lib.NewFeatureFromFile()
 	if err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to read feature from associated feature file. %v", err))
-		os.Exit(1)
+		return fmt.Errorf("failed to read feature from associated feature file. %v", err)
 	}
 
 	currentVersion, err := lib.GitOriginCurrentVersion()
 	if err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to get current project version. %v", err))
-		os.Exit(1)
+		return fmt.Errorf("failed to get current project version. %v", err)
 	}
 
-	updatedVersion := bumpReleaseVersion(currentVersion, versionLevel)
-	
-	changelogEntry := changelog.NewChangelogEntry(feature, updatedVersion, versionLevel == "MAJOR")
+	updatedVersion := bumpReleaseVersion(currentVersion, fc.action)
+
+	changelogEntry := changelog.NewChangelogEntry(feature, updatedVersion, fc.action == "MAJOR")
 
 	changelogLines, err := changelog.CreateChangeLogLines(changelogEntry)
 	if err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to update the changelog. %v", err))
-		os.Exit(1)
+		return fmt.Errorf("failed to update the changelog. %v", err)
 	}
 
 	if err := changelog.WriteChangelogToFile(changelogLines); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to write changelog entry. %v", err))
-		os.Exit(1)
+		return fmt.Errorf("failed to write changelog entry. %v", err)
 	}
 
 	if err := os.RemoveAll(GOGDir); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to remove GOG directory. %v", err))
-		os.Exit(1)
+		return fmt.Errorf("failed to remove GOG directory. %v", err)
 	}
 
 	if stderr, err := feature.PushChanges(feature.Comment); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to push changes to remote repository. %v", err))
-		lib.GetLogger().Error(stderr)
-		os.Exit(1)
+		return fmt.Errorf("failed to push changes to remote repository. %v \n%s", err, stderr)
 	}
 
 	stderr, err := lib.GitCheckoutDefaultBranch()
 	if err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to checkout default branch. %v", err))
-		lib.GetLogger().Error(stderr)
-		os.Exit(1)
+		return fmt.Errorf("failed to checkout default branch. %v \n%s", err, stderr)
 	}
 
 	if stderr, err := feature.Rebase(); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to rebase commits into new release. %v", err))
-		lib.GetLogger().Error(stderr)
-		os.Exit(1)
+		return fmt.Errorf("failed to rebase commits into new release. %v \n%s", err, stderr)
 	}
 
 	if stderr, err := feature.CreateReleaseTags(updatedVersion); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to create release tags. %v", err))
-		lib.GetLogger().Error(stderr)
-		os.Exit(1)
+		return fmt.Errorf("failed to create release tags. %v \n%s", err, stderr)
 	}
 
 	if stderr, err := lib.GitPushRemote(""); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to push rebase to remote. %v", err))
-		lib.GetLogger().Error(stderr)
-		os.Exit(1)
+		return fmt.Errorf("failed to push rebase to remote. %v \n%s", err, stderr)
 	}
 
 	if stderr, err := lib.GitPushRemoteTagsOnly(); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to publish release tags to remote. %v", err))
-		lib.GetLogger().Error(stderr)
-		os.Exit(1)
+		return fmt.Errorf("failed to publish release tags to remote. %v \n%s", err, stderr)
 	}
 
 	if stderr, err := feature.DeleteBranch(); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to delete existing feature branch for %s. %v", feature.Jira, err))
-		lib.GetLogger().Error(stderr)
-		os.Exit(1)
+		return fmt.Errorf("failed to delete existing feature branch for %s. %v \n%s", feature.Jira, err, stderr)
 	}
 
 	lib.GetLogger().Info(fmt.Sprintf("Successfully created new feature release for %s!", feature.Jira))
+
+	return nil
+}
+
+func (fc *FinishCommand) Name() string {
+	return fc.name
 }

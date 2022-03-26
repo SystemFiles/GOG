@@ -1,41 +1,66 @@
 package command
 
 import (
+	"flag"
 	"fmt"
-	"os"
+	"strings"
 
 	"sykesdev.ca/gog/lib"
 )
 
-func PushUsage() {
-	lib.GetLogger().Info("Usage: gog push [message ...]")
+type PushCommand struct {
+	fs *flag.FlagSet
+
+	name string
+	message string
 }
 
-func ExecPush(message string) {
+func NewPushCommand() *PushCommand {
+	pc := &PushCommand{
+		name: "push",
+		fs: flag.NewFlagSet("push", flag.ContinueOnError),
+	}
+
+	return pc
+}
+
+func (pc *PushCommand) Init(args []string) error {
+	err := pc.fs.Parse(args)
+
+	if len(pc.fs.Args()) >= 1 {
+		pc.message = strings.Join(pc.fs.Args(), " ")
+	}
+
+	return err
+}
+
+func (pc *PushCommand) Run() error {
 	workingDir, _ := lib.WorkspacePaths()
 
 	if !lib.GitIsValidRepo() {
-		lib.GetLogger().Error(fmt.Sprintf("The current directory (%s) is not a valid git repository", workingDir))
-		os.Exit(1)
+		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)
 	}
 
 	feature, err := lib.NewFeatureFromFile()
 	if err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to read feature from features file (%s). %v", workingDir + "/.gog/feature.json", err))
-		os.Exit(1)
+		return fmt.Errorf("failed to read feature from features file (%s). %v", workingDir + "/.gog/feature.json", err)
 	}
 	defer feature.Save()
 	
-	if message == "" {
-		message = fmt.Sprintf("Test Build (%d)", feature.TestCount)
+	if pc.message == "" {
+		pc.message = fmt.Sprintf("Test Build (%d)", feature.TestCount)
 		feature.UpdateTestCount()
 	}
 
-	if stderr, err := feature.PushChanges(message); err != nil {
-		lib.GetLogger().Error(fmt.Sprintf("Failed to push changes to remote repository. %v", err))
-		lib.GetLogger().Error(stderr)
-		os.Exit(1)
+	if stderr, err := feature.PushChanges(pc.message); err != nil {
+		return fmt.Errorf("failed to push changes to remote repository. %v \n%s", err, stderr)
 	}
 
 	lib.GetLogger().Info("Successfully pushed changes to remote feature!")
+
+	return nil
+}
+
+func (pc *PushCommand) Name() string {
+	return pc.name
 }
