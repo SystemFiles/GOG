@@ -130,10 +130,6 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("failed to create feature tracking file (%v)", err)
 	}
 
-	if stderr, err := feature.PushChanges("Start Feature"); err != nil {
-		return fmt.Errorf("failed to push changes to remote repository. %v\n%s", err, stderr)
-	}
-
 	lib.GetLogger().Info(fmt.Sprintf("Successfully created feature %s!", feature.Jira))
 
 	return nil
