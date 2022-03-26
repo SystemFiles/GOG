@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [ 0.1.2 ] - 2022-3-26 3:13:48
+
+> BENS-0004 =-= Use Flag Package Properly
+
+### Changed
+
+- `d56d957` - BENS-0004 implemented better argument handling
+- `ec566b3` - BENS-0004 Start Feature
+
+
 
 ## [ 0.1.1 ] - 2022-3-25 20:57:32
 
@@ -29,4 +39,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `5273ff2` - BENS-0002 Continued work to simply codebase
 - `45ba6bd` - BENS-0002 Initial refactor
 - `2c64182` - BENS-0002 Initial refactor
-
