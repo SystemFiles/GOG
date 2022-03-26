@@ -14,7 +14,6 @@ import (
 type FinishAction string
 
 func bumpReleaseVersion(currentVersion semver.Semver, action FinishAction) (semver.Semver) {
-
 	switch action {
 	case "MAJOR":
 		return currentVersion.BumpMajor()
@@ -48,7 +47,22 @@ func NewFinishCommand() *FinishCommand {
 	fc.fs.BoolVar(&fc.minor, "minor", false, "specifies that this is a minor feature (no breaking, but is not a bug fix or patch)")
 	fc.fs.BoolVar(&fc.patch, "patch", false, "specifies this is a bugfix or small patch/update")
 
+	fc.fs.Usage = fc.Help
+
 	return fc
+}
+
+func (fc *FinishCommand) Help() {
+	fmt.Printf(
+`Usage: %s finish (-major | -minor | -patch) [-h] [-help]
+
+-------====== Finish Arguments ======-------
+
+`, os.Args[0])
+
+	fc.fs.PrintDefaults()
+
+	fmt.Println("\n-------================================-------")
 }
 
 func (fc *FinishCommand) Init(args []string) error {
@@ -62,15 +76,15 @@ func (fc *FinishCommand) Init(args []string) error {
 		fc.action = "PATCH"
 	}
 
+	if fc.action == "" {
+		return errors.New("failed to specify major, minor or patch for this feature upgrade (re-run wiht -h for full usage details)")
+	}
+
 	return err
 }
 
 func (fc *FinishCommand) Run() error {
 	workingDir, GOGDir := lib.WorkspacePaths()
-
-	if fc.action == "" {
-		return errors.New("invalid usage of finish sub-command")
-	}
 
 	if !lib.GitIsValidRepo() {
 		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)

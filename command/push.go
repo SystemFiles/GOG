@@ -3,6 +3,7 @@ package command
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strings"
 
 	"sykesdev.ca/gog/lib"
@@ -21,7 +22,24 @@ func NewPushCommand() *PushCommand {
 		fs: flag.NewFlagSet("push", flag.ContinueOnError),
 	}
 
+	pc.fs.Usage = pc.Help
+
 	return pc
+}
+
+func (fc *PushCommand) Help() {
+	fmt.Printf(
+`Usage: %s push [message] [-h] [-help]
+
+-------====== Push Arguments ======-------
+
+message
+	specifies a commit message for this feature push
+`, os.Args[0])
+
+	fc.fs.PrintDefaults()
+
+	fmt.Println("\n-------================================-------")
 }
 
 func (pc *PushCommand) Init(args []string) error {

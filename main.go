@@ -6,11 +6,12 @@ import (
 	"os"
 
 	"sykesdev.ca/gog/command"
+	"sykesdev.ca/gog/lib"
 )
 
 func root() error {
 	if len(os.Args[1:]) < 1 {
-		return errors.New("you must pass a sub-command")
+		return errors.New("you must pass a sub-command\nUsage: gog <feature | push | finish> [options ...] [-h] [-help]")
 	}
 
 	cmds := []command.Runnable {
@@ -23,7 +24,13 @@ func root() error {
 
 	for _, cmd := range cmds {
 		if cmd.Name() == subcommand {
-			cmd.Init(os.Args[2:])
+			if lib.StringInSlice(os.Args, "-h") || lib.StringInSlice(os.Args, "-help") {
+				cmd.Help()
+				return nil
+			}
+			if err := cmd.Init(os.Args[2:]); err != nil {
+				return err
+			}
 			return cmd.Run()
 		}
 	}
