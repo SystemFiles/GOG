@@ -18,6 +18,7 @@ func root() error {
 		command.NewFeatureCommand(),
 		command.NewPushCommand(),
 		command.NewFinishCommand(),
+		command.NewUpdateSelfCommand(),
 	}
 
 	subcommand := os.Args[1]
