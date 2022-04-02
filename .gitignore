@@ -16,3 +16,6 @@
 
 # Output of build
 dist/
+
+# Mac
+.DS_STORE

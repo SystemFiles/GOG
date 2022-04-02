@@ -8,10 +8,9 @@ import (
 	"strings"
 )
 
-type UpdateLevel string
 type Semver [3]int
 
-func Parse(versionString string) (Semver) {
+func MustParse(versionString string) (Semver) {
 	if matched, _ := regexp.Match(`^(v)?([0-9])+\.([0-9])+\.([0-9])+$`, []byte(versionString)); !matched {
 		panic(errors.New("cannot parse version string since it is not in a valid semver format"))
 	}

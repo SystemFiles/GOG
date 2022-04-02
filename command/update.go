@@ -4,6 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	"sykesdev.ca/gog/lib"
+	"sykesdev.ca/gog/lib/update"
 )
 
 type UpdateSelfCommand struct {
@@ -42,6 +45,14 @@ func (usc *UpdateSelfCommand) Init(args []string) error {
 }
 
 func (usc *UpdateSelfCommand) Run() error {
+	lib.GetLogger().Info("Performing in-place upgrade for GOG ...")
+
+	u := update.NewUpdater(usc.tag)
+	if err := u.Update(); err != nil {
+		return err
+	}
+
+	lib.GetLogger().Info("Completed in-place upgrade successfully!")
 	return nil
 }
 

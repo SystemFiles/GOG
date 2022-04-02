@@ -145,5 +145,5 @@ func GitOriginCurrentVersion() (semver.Semver, error) {
 		return version, nil
 	}
 
-	return semver.Parse(latestTag), nil
+	return semver.MustParse(latestTag), nil
 }
