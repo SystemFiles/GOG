@@ -59,7 +59,9 @@ func NewUpdater(tag string) (*Updater, error) {
 		u.updateVersion = semver.MustParse(tag)
 	}
 
-	u.getReleaseForVersion(u.updateVersion)
+	if err := u.getReleaseForVersion(u.updateVersion); err != nil {
+		return nil, err
+	}
 
 	return u, nil
 }
