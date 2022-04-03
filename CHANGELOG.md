@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.2.1 ] - 2022-4-3 16:0:13
+
+> BENS-0008 =-= Fixup Usage Docs
+
+### Changed
+
+- `e4bad8d` - BENS-0008 made usage example more useful
+- `ab9cc24` - BENS-0008 Start Feature
+
+
 
 ## [ 0.2.0 ] - 2022-4-3 15:45:40
 
