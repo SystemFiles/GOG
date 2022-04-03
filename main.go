@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"runtime"
 
 	"sykesdev.ca/gog/command"
 	"sykesdev.ca/gog/lib"
@@ -54,8 +53,8 @@ func main() {
 
 	// fmt.Println(a)
 
-	fmt.Println(runtime.GOOS)
-	fmt.Println(runtime.GOARCH)
+	// fmt.Println(runtime.GOOS)
+	// fmt.Println(runtime.GOARCH)
 
 	// downloadUrl := "https://github.com/SystemFiles/stay-up/releases/download/v2.0.0/stay-up_2.0.0_darwin_amd64.tar.gz"
 

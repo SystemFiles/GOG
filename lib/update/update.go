@@ -33,7 +33,7 @@ type Updater struct {
 	binaryLocation string
 }
 
-func NewUpdater(tag string) *Updater {
+func NewUpdater(tag string) (*Updater, error) {
 	binaryPath, err := os.Executable()
 	if err != nil {
 		panic("failed to get executable path")
@@ -50,12 +50,14 @@ func NewUpdater(tag string) *Updater {
 
 	u.currentVersion = semver.MustParse(Version)
 	if tag == "" {
-		u.getLatestVersionAndRelease()
+		if err := u.getLatestVersionAndRelease(); err != nil {
+			return nil, err
+		}
 	} else {
 		u.updateVersion = semver.MustParse(tag)
 	}
 
-	return u
+	return u, nil
 }
 
 func (u *Updater) Client() *github.Client {
@@ -82,14 +84,16 @@ func (u *Updater) BinaryLocation() string {
 	return u.binaryLocation
 }
 
-func (u *Updater) getLatestVersionAndRelease() {
+func (u *Updater) getLatestVersionAndRelease() error {
 	releases, _, err := u.client.Repositories.ListReleases(ctx, u.repoOwner, u.repoName, &github.ListOptions{})
 	if err != nil {
-		panic("failed to get latest GOG version. " + err.Error())
+		return errors.New("failed to get latest GOG version. " + err.Error())
 	}
 
 	u.updateVersion = semver.MustParse(*releases[0].TagName)
 	u.latestRelease = releases[0]
+
+	return nil
 }
 
 func (u *Updater) getLatestReleaseAsset() (*github.ReleaseAsset, error) {
@@ -127,6 +131,7 @@ func (u *Updater) downloadLatestReleaseBinary() (io.ReadCloser, error) {
 }
 
 func (u *Updater) Update() error {
+
 	tarFile, err := u.downloadLatestReleaseBinary()
 	if err != nil {
 		return err

@@ -31,7 +31,7 @@ func (usc *UpdateSelfCommand) Help() {
 	fmt.Printf(
 `Usage: %s update [-tag TAG] [-h] [-help]
 
--------====== Tag Arguments ======-------
+--------======= Tag Arguments =======--------
 
 `, os.Args[0])
 
@@ -47,7 +47,11 @@ func (usc *UpdateSelfCommand) Init(args []string) error {
 func (usc *UpdateSelfCommand) Run() error {
 	lib.GetLogger().Info("Performing in-place upgrade for GOG ...")
 
-	u := update.NewUpdater(usc.tag)
+	u, err := update.NewUpdater(usc.tag)
+	if err != nil {
+		return err
+	}
+
 	if err := u.Update(); err != nil {
 		return err
 	}
