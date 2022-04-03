@@ -42,8 +42,8 @@ func NewUpdater(tag string) (*Updater, error) {
 
 	u := &Updater{
 		client: github.NewClient(nil),
-		repoOwner: "systemfiles",
-		repoName: "gog",
+		repoOwner: "SystemFiles",
+		repoName: "GOG",
 		binaryOs: runtime.GOOS,
 		binaryArch: runtime.GOARCH,
 		binaryLocation: binaryPath,
