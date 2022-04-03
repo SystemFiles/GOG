@@ -26,7 +26,10 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         name: Release v${{ steps.get_version.outputs.VERSION }}
-        body_path: CHANGELOG.md
+        body: |
+          GOG Release v${{ steps.get_version.outputs.VERSION }}
+          
+          For full change details read the [CHANGELOG](/CHANGELOG.md)
     - uses: wangyoucao577/go-release-action@v1.25
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}

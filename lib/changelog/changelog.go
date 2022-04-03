@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -40,23 +41,22 @@ func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
 	}
 
 	latestFeatIndex := 0
+	versionLine := regexp.MustCompile(`^(#){2}(\ ){1}(\[)`)
 	for i, line := range changelogLines {
-		if strings.Contains(line, "## [") {
+		if matched := versionLine.MatchString(line); matched {
 			latestFeatIndex = i
 			break
 		}
 	}
 
-	// If CHANGELOG is malformed, rewrite the file
-	var existingChanges []string
+	existingChanges := []string{}
 	if latestFeatIndex != 0 {
 		existingChanges = changelogLines[latestFeatIndex:]
-		changelogLines = append(changelogLines[:latestFeatIndex-1], entry.String())
-		changelogLines = append(changelogLines, existingChanges...)
-	} else {
-		changelogLines = append([]string{}, changelogHeader)
-		changelogLines = append(changelogLines, entry.String())
 	}
+
+	changelogLines = append([]string{}, changelogHeader)
+	changelogLines = append(changelogLines, entry.String())
+	changelogLines = append(changelogLines, existingChanges...)
 
 	return changelogLines, nil
 }
@@ -88,7 +88,7 @@ func NewChangelogEntry(feature *lib.Feature, version semver.Semver, added bool) 
 	return &ChangelogEntry{ Feature: feature, Version: version, Added: added }
 }
 
-func (e *ChangelogEntry) String() string {
+func (e *ChangelogEntry) Lines() []string {
 	currentTime := time.Now().UTC()
 	formattedTimeString := fmt.Sprintf("%d-%d-%d %d:%d:%d",
 		currentTime.Year(),
@@ -114,7 +114,11 @@ func (e *ChangelogEntry) String() string {
 
 	lines = append(lines, changes...)
 	lines = append(lines, "\n\n")
-	
-	return strings.Join(lines, "\n")
+
+	return lines
+}
+
+func (e *ChangelogEntry) String() string {
+	return strings.Join(e.Lines(), "\n")
 }
 
