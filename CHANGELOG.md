@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+
+
+## [ 0.2.3 ] - 2022-4-3 23:37:6
+
+> BENS-0010 Bug Fixes + Version Flag
+
+### Changed
+
+- `4c4d283` - BENS-0010 cleaned tag version parsing for update cmd
+- `9e7958e` - BENS-0010 update README
+- `89e7c8e` - BENS-0010 rem version from main.go
+- `51dc64c` - BENS-0010 updating is now a little more clear
+- `454b562` - BENS-0010 caught error in update release getter
+
+
+
 ## [ 0.2.2 ] - 2022-4-3 16:4:49
 
 > BENS-0009 =-= No Release for '*.x' Versions
