@@ -124,7 +124,7 @@ func (fc *FeatureCommand) Run() error {
 
 	if err := feature.Save(); err != nil {
 		if err := lib.CleanFeature(feature); err != nil {
-			lib.GetLogger().Error(fmt.Sprintf("Failed to exit cleanly ... %v", err))
+			return fmt.Errorf(fmt.Sprintf("Failed to exit cleanly ... %v", err))
 		}
 
 		return fmt.Errorf("failed to create feature tracking file (%v)", err)

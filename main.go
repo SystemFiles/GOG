@@ -47,7 +47,7 @@ func root() error {
 
 func main() {
 	if err := root(); err != nil {
-		fmt.Println(err)
+		lib.GetLogger().Error(err.Error())
 		os.Exit(1)
 	}
 }

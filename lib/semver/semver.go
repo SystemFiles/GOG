@@ -10,8 +10,21 @@ import (
 
 type Semver [3]int
 
+func isValidSemver(versionString string) bool {
+	matched, _ := regexp.Match(`^(v)?([0-9])+\.([0-9])+\.([0-9])+$`, []byte(versionString))
+	return matched
+}
+
+func Parse(versionString string) (Semver, error) {
+	if !isValidSemver(versionString) {
+		return Semver{}, errors.New("cannot parse version string provided since it is not in a valid semver format")
+	}
+
+	return MustParse(versionString), nil
+}
+
 func MustParse(versionString string) (Semver) {
-	if matched, _ := regexp.Match(`^(v)?([0-9])+\.([0-9])+\.([0-9])+$`, []byte(versionString)); !matched {
+	if !isValidSemver(versionString) {
 		panic(errors.New("cannot parse version string since it is not in a valid semver format"))
 	}
 
