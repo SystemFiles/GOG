@@ -7,9 +7,8 @@ import (
 
 	"sykesdev.ca/gog/command"
 	"sykesdev.ca/gog/lib"
+	"sykesdev.ca/gog/lib/update"
 )
-
-var Version string
 
 func root() error {
 	if len(os.Args[1:]) < 1 {
@@ -17,7 +16,7 @@ func root() error {
 	}
 
 	if lib.StringInSlice(os.Args, "-v") || lib.StringInSlice(os.Args, "-version") {
-		lib.GetLogger().Info(fmt.Sprintf("Current Version of GOG: %s", Version))
+		lib.GetLogger().Info(fmt.Sprintf("Current Version of GOG: v%s", update.Version))
 		return nil
 	}
 
