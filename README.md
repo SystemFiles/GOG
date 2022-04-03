@@ -6,7 +6,7 @@ Go-G is a Golang implementation of OG (AKA: Opinionated Git)
 
 ```bash
 
-gog (feature | push | finish) [options ...]
+gog (feature | push | finish) [options ...] [-h] [-help]
 
 ```
 
