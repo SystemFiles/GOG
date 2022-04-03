@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [ 0.2.2 ] - 2022-4-3 16:4:49
+
+> BENS-0009 =-= No Release for '*.x' Versions
+
+### Changed
+
+- `7f8feb8` - BENS-0009 added exclusion to release triggers
+- `c8f59aa` - BENS-0009 Start Feature
+
+
 
 ## [ 0.2.1 ] - 2022-4-3 16:0:13
 
