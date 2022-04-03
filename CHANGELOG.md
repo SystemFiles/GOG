@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.2.0 ] - 2022-4-3 15:45:40
+
+> BENS-0007 GOG Updates
+
+### Changed
+
+- `260182b` - BENS-0007 fixed reponame on update pkg
+- `819c5bc` - BENS-0007 fixed changelog spacing issues
+- `62c3160` - BENS-0007 updated release workflow
+- `6f341ab` - BENS-0007 more helpful changelog error message
+- `f86c959` - BENS-0007 refactor and error handling for update
+- `480f5c8` - BENS-0007 implemented first iteration of update command
+- `8c11a11` - BENS-0007 deployment workflow for gog binaries
+- `1a40fdb` - BENS-0007 added the updated command (no impl)
+- `0d26617` - BENS-0007 removed unnecessary push from feature create
+- `d28f73e` - BENS-0007 Start Feature
+
+
+
 ## [ 0.1.4 ] - 2022-3-26 21:10:18
 
 > BENS-0006 Quick Fixup Changelog Format
