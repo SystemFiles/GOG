@@ -109,7 +109,7 @@ func (e *ChangelogEntry) String() string {
 
 	changes, err := e.Feature.ListChanges()
 	if err != nil {
-		lib.GetLogger().Fatal(fmt.Sprintf("Failed to get feature changes from git. %v", err))
+		lib.GetLogger().Fatal(fmt.Sprintf("failed to get feature changes from git. try pushing a change first. %v", err))
 	}
 
 	lines = append(lines, changes...)
