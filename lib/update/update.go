@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v43/github"
-	"sykesdev.ca/gog/lib"
 	"sykesdev.ca/gog/lib/semver"
 )
 
@@ -90,6 +89,14 @@ func (u *Updater) BinaryLocation() string {
 	return u.binaryLocation
 }
 
+func (u *Updater) CurrentVersion() semver.Semver {
+	return u.currentVersion
+}
+
+func (u *Updater) UpdateVersion() semver.Semver {
+	return u.updateVersion
+}
+
 func (u *Updater) getLatestVersion() (semver.Semver, error) {
 	releases, _, err := u.client.Repositories.ListReleases(ctx, u.repoOwner, u.repoName, &github.ListOptions{})
 	if err != nil {
@@ -153,10 +160,8 @@ func (u *Updater) downloadLatestReleaseBinary() (io.ReadCloser, error) {
 }
 
 func (u *Updater) Update() error {
-
 	if u.currentVersion == u.updateVersion {
-		lib.GetLogger().Info("GOG is already at the latest version")
-		return nil
+		return errors.New("GOG is already at the latest version")
 	}
 
 	tarFile, err := u.downloadLatestReleaseBinary()

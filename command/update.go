@@ -56,7 +56,7 @@ func (usc *UpdateSelfCommand) Run() error {
 		return err
 	}
 
-	lib.GetLogger().Info("Completed in-place upgrade successfully!")
+	lib.GetLogger().Info(fmt.Sprintf("Successfully updated GOG from v%s to v%s", u.CurrentVersion(), u.UpdateVersion()))
 	return nil
 }
 
