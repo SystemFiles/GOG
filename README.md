@@ -1,6 +1,6 @@
-# GO-G - Opinionated Git
+# GOG - Opinionated Git
 
-Go-G is a Golang implementation of OG (AKA: Opinionated Git)
+GoG is the Golang implementation of OG (AKA: Opinionated Git)
 
 ## Usage
 
