@@ -1,7 +1,7 @@
 on:
-  create:
+  push:
     tags:
-      - '*'
+    - '*'
 
 jobs:
   releases-matrix:
@@ -21,10 +21,16 @@ jobs:
     - name: Get Current Release Version
       id: get_version
       run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        name: Release v${{ steps.get_version.outputs.VERSION }}
+        body_path: CHANGELOG.md
     - uses: wangyoucao577/go-release-action@v1.25
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        ldflags: "-X 'update.Version=${{ steps.get_version.outputs.VERSION }}'"
-        extra_files: LICENSE README.md
+        ldflags: "-X 'sykesdev.ca/gog/lib/update.Version=${{ steps.get_version.outputs.VERSION }}'"
+        extra_files: LICENSE README.md CHANGELOG.md

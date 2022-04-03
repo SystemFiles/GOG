@@ -11,11 +11,12 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v43/github"
+	"sykesdev.ca/gog/lib"
 	"sykesdev.ca/gog/lib/semver"
 )
 
 var ctx = context.Background()
-var Version string = "1.0.2"
+var Version string
 
 type Updater struct {
 	client *github.Client
@@ -26,7 +27,7 @@ type Updater struct {
 	repoOwner string
 	repoName string
 
-	latestRelease *github.RepositoryRelease
+	updateRelease *github.RepositoryRelease
 
 	binaryOs string
 	binaryArch string
@@ -50,12 +51,15 @@ func NewUpdater(tag string) (*Updater, error) {
 
 	u.currentVersion = semver.MustParse(Version)
 	if tag == "" {
-		if err := u.getLatestVersionAndRelease(); err != nil {
+		u.updateVersion, err = u.getLatestVersion()
+		if err != nil {
 			return nil, err
 		}
 	} else {
 		u.updateVersion = semver.MustParse(tag)
 	}
+
+	u.getReleaseForVersion(u.updateVersion)
 
 	return u, nil
 }
@@ -84,24 +88,41 @@ func (u *Updater) BinaryLocation() string {
 	return u.binaryLocation
 }
 
-func (u *Updater) getLatestVersionAndRelease() error {
+func (u *Updater) getLatestVersion() (semver.Semver, error) {
 	releases, _, err := u.client.Repositories.ListReleases(ctx, u.repoOwner, u.repoName, &github.ListOptions{})
 	if err != nil {
-		return errors.New("failed to get latest GOG version. " + err.Error())
+		return semver.Semver{}, errors.New("failed to list project releases. " + err.Error())
 	}
 
-	u.updateVersion = semver.MustParse(*releases[0].TagName)
-	u.latestRelease = releases[0]
+	return semver.MustParse(*releases[0].TagName), nil
+}
+
+func (u *Updater) getReleaseForVersion(version semver.Semver) error {
+	releases, _, err := u.client.Repositories.ListReleases(ctx, u.repoOwner, u.repoName, &github.ListOptions{})
+	if err != nil {
+		return errors.New("failed to list project releases. " + err.Error())
+	}
+
+	for _, r := range releases {
+		if *r.TagName == version.String() {
+			u.updateRelease = r
+			break
+		}
+	}
+
+	if u.updateRelease == nil {
+		return fmt.Errorf("failed to locate the specified version (%s) in project releases", version)
+	}
 
 	return nil
 }
 
 func (u *Updater) getLatestReleaseAsset() (*github.ReleaseAsset, error) {
-	if u.latestRelease == nil {
+	if u.updateRelease == nil {
 		return nil, errors.New("cannot get latest release asset since 'latestRelease' is not defined")
 	}
 
-	for _, asset := range u.latestRelease.Assets {
+	for _, asset := range u.updateRelease.Assets {
 		extension := "tar.gz"
 		if u.binaryOs == "windows" {
 			extension = "zip"
@@ -121,21 +142,26 @@ func (u *Updater) downloadLatestReleaseBinary() (io.ReadCloser, error) {
 	}
 	downloadUrl := asset.GetBrowserDownloadURL()
 
-	req, err := http.NewRequestWithContext(ctx, "GET", downloadUrl, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Accept", "*/*")
+	resp, err := http.Get(downloadUrl)
+  if err != nil {
+    return nil, err
+  }
 
-	return req.GetBody()
+	return resp.Body, nil
 }
 
 func (u *Updater) Update() error {
+
+	if u.currentVersion == u.updateVersion {
+		lib.GetLogger().Info("GOG is already at the latest version")
+		return nil
+	}
 
 	tarFile, err := u.downloadLatestReleaseBinary()
 	if err != nil {
 		return err
 	}
+	defer tarFile.Close()
 
 	tData, err := UntarBinary(tarFile, u.repoName)
 	if err != nil {
@@ -157,7 +183,12 @@ func (u *Updater) Update() error {
 
 	_, err = io.Copy(out, tData)
 	if err != nil {
-		return nil
+		return err
+	}
+
+	err = os.Chmod(u.binaryLocation, 0755)
+	if err != nil {
+		return err
 	}
 
 	return nil
