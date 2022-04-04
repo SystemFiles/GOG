@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.3.0 ] - 2022-4-4 12:59:49
+
+> BENS-0011 Cmd Shortnames and Release Binary name
+
+### Changed
+
+- `76e9d6d` - BENS-0011 more accurate descriptions for major,minor,patch flags
+- `9c449d9` - BENS-0011 changed release binary name and added subcmd shorthands
+
+
+
 ## [ 0.2.3 ] - 2022-4-3 23:37:6
 
 > BENS-0010 Bug Fixes + Version Flag
