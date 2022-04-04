@@ -12,6 +12,8 @@ curl -s https://raw.githubusercontent.com/SystemFiles/GOG/master/INSTALL.sh | ba
 
 ```
 
+This will install the latest version of GOG on a Linux or OSX target.
+
 ### Windows
 
 TBD

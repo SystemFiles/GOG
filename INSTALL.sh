@@ -21,7 +21,7 @@ if [ ! command -v curl &> /dev/null ]; then
 fi
 
 [ "$(uname -s)" == "Darwin" ] && INSTALL_OS="darwin"
-[ "$(uname -s)" == "Linux"] && INSTALL_OS="linux"
+[ "$(uname -s)" == "Linux" ] && INSTALL_OS="linux"
 
 if [[ -z $INSTALL_OS ]]; then
   echo "Current OS not supported by installation script ... exiting!"
@@ -30,7 +30,7 @@ fi
 
 [ "$(uname -m)" == "x86_64" ] && INSTALL_ARCH="amd64"
 [ "$(uname -m)" == "armv7l" ] && INSTALL_ARCH="arm64"
-[ "$(uname -m)" == "i386"] && INSTALL_ARCH="386"
+[ "$(uname -m)" == "i386" ] && INSTALL_ARCH="386"
 
 if [[ -z $INSTALL_ARCH ]]; then
   echo "Current OS Architecture not supported by installation script ... exiting!"
@@ -43,15 +43,15 @@ if [[ ! -d "$HOME/bin" ]]; then
   mkdir "$HOME/bin"
 fi
 
-if [[ ! -d "$HOME/tmp" ]]; then
-  mkdir "$HOME/tmp"
+if [[ ! -d "$HOME/gogtmp" ]]; then
+  mkdir "$HOME/gogtmp"
 fi
 
-cd $HOME/tmp
+cd $HOME/gogtmp
 curl -LO "https://github.com/SystemFiles/GOG/releases/download/${GOG_VERSION}/${INSTALL_FILE}"
 tar -zxvf "./${INSTALL_FILE}"
 mv ./gog $HOME/bin/gog
-cd; rm -rf $HOME/tmp/
+cd; rm -rf $HOME/gogtmp/
 
 $HOME/bin/gog -v
 if [[ $? -ne 0 ]]; then
