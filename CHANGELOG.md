@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.3.1 ] - 2022-4-4 15:21:36
+
+> BENS-0012 Fix Broken Update
+
+### Changed
+
+- `efbd56a` - BENS-0012 implemented asset_name override on CD
+
+
+
 ## [ 0.3.0 ] - 2022-4-4 12:59:49
 
 > BENS-0011 Cmd Shortnames and Release Binary name
