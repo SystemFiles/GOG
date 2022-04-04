@@ -173,7 +173,7 @@ func (u *Updater) Update() error {
 	}
 	defer tarFile.Close()
 
-	tData, err := UntarBinary(tarFile, u.repoName)
+	tData, err := UntarBinary(tarFile, strings.ToLower(u.repoName))
 	if err != nil {
 		return err
 	}

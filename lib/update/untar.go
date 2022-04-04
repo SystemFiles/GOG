@@ -3,6 +3,7 @@ package update
 import (
 	"archive/tar"
 	"compress/gzip"
+	"errors"
 	"io"
 )
 
@@ -19,9 +20,9 @@ func UntarBinary(r io.Reader, binaryName string) (*tar.Reader, error) {
 		header, err := tr.Next()
 
 		switch {
-		// if no more files are found return
+		// if no gog binary is found return with error
 		case err == io.EOF:
-			return nil, nil
+			return nil, errors.New("failed to locate required binary")
 		case err != nil:
 			return nil, err
 		case header == nil:

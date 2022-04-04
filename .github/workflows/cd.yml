@@ -36,6 +36,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
+        asset_name: GOG-${{ steps.get_version.outputs.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}
         binary_name: gog
         ldflags: "-X 'sykesdev.ca/gog/lib/update.Version=${{ steps.get_version.outputs.VERSION }}'"
         extra_files: LICENSE README.md CHANGELOG.md
