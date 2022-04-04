@@ -45,9 +45,9 @@ func NewFinishCommand() *FinishCommand {
 		fs: flag.NewFlagSet("finish", flag.ContinueOnError),
 	}
 
-	fc.fs.BoolVar(&fc.major, "major", false, "specifies that this is a major feature (breaking changes)")
-	fc.fs.BoolVar(&fc.minor, "minor", false, "specifies that this is a minor feature (no breaking, but is not a bug fix or patch)")
-	fc.fs.BoolVar(&fc.patch, "patch", false, "specifies this is a bugfix or small patch/update")
+	fc.fs.BoolVar(&fc.major, "major", false, "specifies that in this freature you make incompatible API changes (breaking changes)")
+	fc.fs.BoolVar(&fc.minor, "minor", false, "specifies that in this feature you add functionality in a backwards compatible manner (non-breaking)")
+	fc.fs.BoolVar(&fc.patch, "patch", false, "specifies that in this feature you make backwards compatible bug fixes small backwards compatible updates")
 
 	fc.fs.Usage = fc.Help
 
