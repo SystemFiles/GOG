@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.3.2 ] - 2022-4-4 19:35:21
+
+> BENS-0013 Update README + Install Scripts
+
+### Changed
+
+- `16f0263` - BENS-0013 additional helpful instructions post-install
+- `4d03c18` - BENS-0013 fixed issue with latest version capture and added tested platforms
+- `b21dcf6` - BENS-0013 Test Build (1)
+- `b903be1` - BENS-0013 latest version one-liner for install script
+- `69abdd4` - BENS-0013 Test Build (0)
+- `5f2b9a4` - BENS-0013 created install script and instructions
+
+
+
 ## [ 0.3.1 ] - 2022-4-4 15:21:36
 
 > BENS-0012 Fix Broken Update
