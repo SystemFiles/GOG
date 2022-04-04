@@ -8,7 +8,7 @@ GOG is an Opinionated Git workflow CLI tool written in Golang to help developers
 
 ```bash
 
-curl -s https://raw.githubusercontent.com/SystemFiles/GOG/master/INSTALL.sh | bash /dev/stdin
+curl -sSL https://raw.githubusercontent.com/SystemFiles/GOG/master/INSTALL.sh | bash /dev/stdin
 
 ```
 
@@ -25,6 +25,14 @@ TBD
 gog (feature | push | finish) [options ...] [-h] [-help]
 
 ```
+
+## Testing
+
+Currently GOG has been tested on the following deployment targets:
+
+- Linux (AMD64)
+- Darwin (AMD64)
+- Windows (AMD64) - Some functionality limited (#12)
 
 ## Credits
 
