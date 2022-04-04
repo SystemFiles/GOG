@@ -58,3 +58,7 @@ if [[ $? -ne 0 ]]; then
   echo "Installation Failed!"
   exit 1
 fi
+
+echo "GOG installation was successful!"
+echo "Ensure that '$HOME/bin' is added to your PATH to finalize the installation"
+echo "GOG has built-in functionality ( gog update [-tag VERSION] ) to handle updates so this installation script only needs to be run once!"
