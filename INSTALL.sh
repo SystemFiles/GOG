@@ -3,7 +3,7 @@
 
 set -e
 
-GOG_VERSION=`curl -s https://api.github.com/repos/systemfiles/gog/releases/latest | grep "tag_name" | cut -d: -f2 | tr -d \" | cut -d, -f1`
+GOG_VERSION=`curl -s https://api.github.com/repos/systemfiles/gog/releases/latest | grep "tag_name" | cut -d: -f2 | tr -d \" | cut -d, -f1 | xargs`
 
 if [[ -f "$HOME/bin/gog" ]]; then
   echo "GOG is already installed."
