@@ -63,3 +63,7 @@ func (usc *UpdateSelfCommand) Run() error {
 func (usc *UpdateSelfCommand) Name() string {
 	return usc.name
 }
+
+func (usc *UpdateSelfCommand) Alias() string {
+	return ""
+}

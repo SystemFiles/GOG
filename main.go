@@ -30,7 +30,7 @@ func root() error {
 	subcommand := os.Args[1]
 
 	for _, cmd := range cmds {
-		if cmd.Name() == subcommand {
+		if cmd.Name() == subcommand || cmd.Alias() == subcommand {
 			if lib.StringInSlice(os.Args, "-h") || lib.StringInSlice(os.Args, "-help") {
 				cmd.Help()
 				return nil

@@ -13,12 +13,14 @@ type PushCommand struct {
 	fs *flag.FlagSet
 
 	name string
+	alias string
 	message string
 }
 
 func NewPushCommand() *PushCommand {
 	pc := &PushCommand{
 		name: "push",
+		alias: "p",
 		fs: flag.NewFlagSet("push", flag.ContinueOnError),
 	}
 
@@ -29,13 +31,13 @@ func NewPushCommand() *PushCommand {
 
 func (fc *PushCommand) Help() {
 	fmt.Printf(
-`Usage: %s push [message] [-h] [-help]
+`Usage: %s (%s | %s) [message] [-h] [-help]
 
 -------====== Push Arguments ======-------
 
 message
 	specifies a commit message for this feature push
-`, os.Args[0])
+`, os.Args[0], fc.name, fc.alias)
 
 	fc.fs.PrintDefaults()
 
@@ -81,4 +83,8 @@ func (pc *PushCommand) Run() error {
 
 func (pc *PushCommand) Name() string {
 	return pc.name
+}
+
+func (pc *PushCommand) Alias() string {
+	return pc.alias
 }

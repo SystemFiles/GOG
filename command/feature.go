@@ -19,6 +19,7 @@ type FeatureCommand struct {
 	fs *flag.FlagSet
 	
 	name string
+	alias string
 	Jira string
 	Comment string
 	FromFeature bool
@@ -27,6 +28,7 @@ type FeatureCommand struct {
 func NewFeatureCommand() *FeatureCommand {
 	fc := &FeatureCommand{
 		name: "feature",
+		alias: "feat",
 		fs: flag.NewFlagSet("feature", flag.ContinueOnError),
 	}
 
@@ -39,7 +41,7 @@ func NewFeatureCommand() *FeatureCommand {
 
 func (fc *FeatureCommand) Help() {
 	fmt.Printf(
-`Usage: %s feature <jira> <comment> [-from-feature] [-h] [-help]
+`Usage: %s (%s | %s) <jira> <comment> [-from-feature] [-h] [-help]
 
 -------====== Feature Arguments ======-------
 
@@ -50,7 +52,7 @@ comment
 
 ------================================------
 
-`, os.Args[0])
+`, os.Args[0], fc.name, fc.alias)
 
 	fc.fs.PrintDefaults()
 
@@ -137,4 +139,8 @@ func (fc *FeatureCommand) Run() error {
 
 func (fc *FeatureCommand) Name() string {
 	return fc.name
+}
+
+func (fc *FeatureCommand) Alias() string {
+	return fc.alias
 }

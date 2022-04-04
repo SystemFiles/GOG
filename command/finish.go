@@ -30,6 +30,7 @@ type FinishCommand struct {
 	fs *flag.FlagSet
 
 	name string
+	alias string
 	action FinishAction
 
 	major bool
@@ -40,6 +41,7 @@ type FinishCommand struct {
 func NewFinishCommand() *FinishCommand {
 	fc := &FinishCommand{
 		name: "finish",
+		alias: "fin",
 		fs: flag.NewFlagSet("finish", flag.ContinueOnError),
 	}
 
@@ -54,11 +56,11 @@ func NewFinishCommand() *FinishCommand {
 
 func (fc *FinishCommand) Help() {
 	fmt.Printf(
-`Usage: %s finish (-major | -minor | -patch) [-h] [-help]
+`Usage: %s (%s | %s) (-major | -minor | -patch) [-h] [-help]
 
 -------====== Finish Arguments ======-------
 
-`, os.Args[0])
+`, os.Args[0], fc.name, fc.alias)
 
 	fc.fs.PrintDefaults()
 
@@ -153,4 +155,8 @@ func (fc *FinishCommand) Run() error {
 
 func (fc *FinishCommand) Name() string {
 	return fc.name
+}
+
+func (fc *FinishCommand) Alias() string {
+	return fc.alias
 }
