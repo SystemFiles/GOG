@@ -10,15 +10,14 @@ if [[ -f "$HOME/bin/gog" ]]; then
   exit 0
 fi
 
-if [ ! command -v tar &> /dev/null ]; then
-  echo "required command, tar, could not be found"
-  exit 1
-fi
-
-if [ ! command -v curl &> /dev/null ]; then
-  echo "required command, curl, could not be found"
-  exit 1
-fi
+REQ_CMDS=(tar curl git)
+for c in "${REQ_CMDS[@]}"; do
+  if ! command -v $c &> /dev/null
+  then
+    echo "GOG requires $c to be installed on the system. Please install it and try running the installer again"
+    exit
+  fi
+done
 
 [ "$(uname -s)" == "Darwin" ] && INSTALL_OS="darwin"
 [ "$(uname -s)" == "Linux" ] && INSTALL_OS="linux"
@@ -48,17 +47,22 @@ if [[ ! -d "$HOME/gogtmp" ]]; then
 fi
 
 cd $HOME/gogtmp
-curl -LO "https://github.com/SystemFiles/GOG/releases/download/${GOG_VERSION}/${INSTALL_FILE}"
-tar -zxvf "./${INSTALL_FILE}"
+curl -sSLO "https://github.com/SystemFiles/GOG/releases/download/${GOG_VERSION}/${INSTALL_FILE}"
+tar -zxf "./${INSTALL_FILE}"
 mv ./gog $HOME/bin/gog
 cd; rm -rf $HOME/gogtmp/
 
-$HOME/bin/gog -v
-if [[ $? -ne 0 ]]; then
+if [ ! $HOME/bin/gog -v &> /dev/null ]; then
   echo "Installation Failed!"
   exit 1
 fi
 
-echo "GOG installation was successful!"
-echo "Ensure that '$HOME/bin' is added to your PATH to finalize the installation"
-echo "GOG has built-in functionality ( gog update [-tag VERSION] ) to handle updates so this installation script only needs to be run once!"
+cat << EOM
+
+GOG installation was successful!
+
+-------------- [ NOTICE ] --------------
+
+- Ensure that '$HOME/bin' is added to your PATH to finalize the installation
+- GOG has updates built-in and should be updated through the use of: gog update [-tag VERSION]
+EOM
