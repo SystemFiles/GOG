@@ -11,11 +11,13 @@ import (
 )
 
 var defaults = `
-logging:
-	level: INFO
+---
+# GOG Configuration Settings
 
+logging:
+  level: "INFO"
 application:
-	tag_prefix: "v"
+  tag_prefix: "v"
 `
 
 var (
@@ -39,7 +41,7 @@ func AppConfig() *Configuration {
 
 		err := instance.load()
 		if err != nil {
-			panic("failed to load app configuration instance")
+			panic("failed to load app configuration instance\n" + err.Error())
 		}
 	})
 
@@ -76,7 +78,9 @@ func (c *Configuration) load() error {
 	defer f.Close()
 
 	buf := bytes.NewBuffer(nil)
-	io.Copy(buf, f)
+	if _, err := io.Copy(buf, f); err != nil {
+		return err
+	}
 
 	err = yaml.Unmarshal(buf.Bytes(), &c)
 	return err
