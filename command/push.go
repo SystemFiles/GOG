@@ -6,7 +6,10 @@ import (
 	"os"
 	"strings"
 
-	"sykesdev.ca/gog/lib"
+	"sykesdev.ca/gog/common"
+	"sykesdev.ca/gog/git"
+	"sykesdev.ca/gog/logging"
+	"sykesdev.ca/gog/models"
 )
 
 type PushCommand struct {
@@ -55,13 +58,13 @@ func (pc *PushCommand) Init(args []string) error {
 }
 
 func (pc *PushCommand) Run() error {
-	workingDir, _ := lib.WorkspacePaths()
+	workingDir, _ := common.WorkspacePaths()
 
-	if !lib.GitIsValidRepo() {
+	if !git.IsValidRepo() {
 		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)
 	}
 
-	feature, err := lib.NewFeatureFromFile()
+	feature, err := models.NewFeatureFromFile()
 	if err != nil {
 		return fmt.Errorf("failed to read feature from features file (%s). %v", workingDir + "/.gog/feature.json", err)
 	}
@@ -76,7 +79,7 @@ func (pc *PushCommand) Run() error {
 		return fmt.Errorf("failed to push changes to remote repository. %v \n%s", err, stderr)
 	}
 
-	lib.GetLogger().Info("Successfully pushed changes to remote feature!")
+	logging.GetLogger().Info("Successfully pushed changes to remote feature!")
 
 	return nil
 }

@@ -8,11 +8,14 @@ import (
 	"regexp"
 	"strings"
 
-	"sykesdev.ca/gog/lib"
+	"sykesdev.ca/gog/common"
+	"sykesdev.ca/gog/git"
+	"sykesdev.ca/gog/logging"
+	"sykesdev.ca/gog/models"
 )
 
 func FeatureUsage() {
-	lib.GetLogger().Info("Usage: gog feature <jira_name> <comment> [-from-feature]")
+	logging.GetLogger().Info("Usage: gog feature <jira_name> <comment> [-from-feature]")
 }
 
 type FeatureCommand struct {
@@ -82,18 +85,18 @@ func (fc *FeatureCommand) Run() error {
 		return errors.New("invalid Jira format ... example of a valid format would be 'JIRA-0023'")
 	}
 
-	workingDir, GOGDir := lib.WorkspacePaths()
+	workingDir, GOGDir := common.WorkspacePaths()
 
-	if !lib.GitIsValidRepo() {
+	if !git.IsValidRepo() {
 		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)
 	}
 
-	feature, err := lib.NewFeature(fc.Jira, fc.Comment)
+	feature, err := models.NewFeature(fc.Jira, fc.Comment)
 	if err != nil {
 		return fmt.Errorf("failed to create feature object. %v", err)
 	}
 
-	initial_branch, err := lib.GitGetCurrentBranch()
+	initial_branch, err := git.GetCurrentBranch()
 	if err != nil {
 		return fmt.Errorf("failed to get current branch of git repository. %v", err)
 	}
@@ -102,21 +105,21 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("there is already a branch in this repo named %s", feature.Jira)
 	}
 
-	if lib.GitHasUnstagedCommits() {
+	if git.HasUnstagedCommits() {
 		return fmt.Errorf("there is unstaged commits on your current branch (%s). For your safety, please stage or discard the changes to continue", initial_branch)
 	}
 
-	if lib.GitHasUncommittedChanges() {
+	if git.HasUncommittedChanges() {
 		return fmt.Errorf("there are staged commits on your current branch (%s) which have not been committed. %v", initial_branch, err)
 	}
 
 	if !fc.FromFeature {
-		if stderr, err := lib.GitCheckoutDefaultBranch(); err != nil {
+		if stderr, err := git.CheckoutDefaultBranch(); err != nil {
 			return fmt.Errorf("failed to checkout default branch for repo. %v\n%s", err, stderr)
 		}
 	}
 
-	if lib.PathExists(GOGDir) {
+	if common.PathExists(GOGDir) {
 		return fmt.Errorf("%s already exists ... there could already be a feature here. Please fix this and try again", GOGDir)
 	}
 
@@ -125,14 +128,14 @@ func (fc *FeatureCommand) Run() error {
 	}
 
 	if err := feature.Save(); err != nil {
-		if err := lib.CleanFeature(feature); err != nil {
+		if err := feature.Clean(); err != nil {
 			return fmt.Errorf(fmt.Sprintf("Failed to exit cleanly ... %v", err))
 		}
 
 		return fmt.Errorf("failed to create feature tracking file (%v)", err)
 	}
 
-	lib.GetLogger().Info(fmt.Sprintf("Successfully created feature %s!", feature.Jira))
+	logging.GetLogger().Info(fmt.Sprintf("Successfully created feature %s!", feature.Jira))
 
 	return nil
 }

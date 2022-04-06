@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"sykesdev.ca/gog/lib"
-	"sykesdev.ca/gog/lib/update"
+	"sykesdev.ca/gog/logging"
+	"sykesdev.ca/gog/update"
 )
 
 type UpdateSelfCommand struct {
@@ -45,7 +45,7 @@ func (usc *UpdateSelfCommand) Init(args []string) error {
 }
 
 func (usc *UpdateSelfCommand) Run() error {
-	lib.GetLogger().Info("Performing in-place upgrade for GOG ...")
+	logging.GetLogger().Info("Performing in-place upgrade for GOG ...")
 
 	u, err := update.NewUpdater(usc.tag)
 	if err != nil {
@@ -56,7 +56,7 @@ func (usc *UpdateSelfCommand) Run() error {
 		return err
 	}
 
-	lib.GetLogger().Info(fmt.Sprintf("Successfully updated GOG from v%s to v%s", u.CurrentVersion(), u.UpdateVersion()))
+	logging.GetLogger().Info(fmt.Sprintf("Successfully updated GOG from v%s to v%s", u.CurrentVersion(), u.UpdateVersion()))
 	return nil
 }
 

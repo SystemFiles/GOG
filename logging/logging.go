@@ -1,24 +1,29 @@
-package lib
+package logging
 
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
+
+	"sykesdev.ca/gog/common"
 )
 
 type Logging struct {
 	Level string
 }
 
-var once sync.Once
-var instance Logging
+var (
+	once sync.Once
+	instance Logging
+)
+var levels = []string{"INFO", "DEBUG", "WARN", "ERROR"}
 
-func GetLogger() Logging {
+func GetLogger() *Logging {
 	once.Do(func() {
 		var lvl string
-		levels := []string{"INFO", "DEBUG", "WARN", "ERROR"}
-		if StringInSlice(levels, os.Getenv("GOG_LOG_LEVEL")) {
+		if common.StringInSlice(levels, os.Getenv("GOG_LOG_LEVEL")) {
 			lvl = os.Getenv("GOG_LOG_LEVEL")
 		} else {
 			lvl = "INFO"
@@ -27,7 +32,13 @@ func GetLogger() Logging {
 		instance = Logging{Level: lvl}
 	})
 
-	return instance
+	return &instance
+}
+
+func (l *Logging) SetupLogger(level string) {
+	if common.StringInSlice(levels, strings.ToUpper(level)) {
+		l.Level = strings.ToUpper(level)
+	}
 }
 
 func (l Logging) Info(message string) {

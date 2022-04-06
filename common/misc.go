@@ -1,4 +1,4 @@
-package lib
+package common
 
 import (
 	"os"
@@ -16,7 +16,7 @@ func StringInSlice(slice []string, value string) (bool) {
 func WorkspacePaths() (string, string) {
 	workingDir, err := os.Getwd()
 	if err != nil {
-		GetLogger().Fatal("Failed to get working directory from path")
+		panic("could not get current working directory")
 	}
 	GOGDir := workingDir + "/.gog"
 
@@ -28,22 +28,4 @@ func PathExists(path string) bool {
 		return false
 	}
 	return true
-}
-
-func CleanFeature(feature *Feature) error {
-	_, GOGDir := WorkspacePaths()
-
-	if _, err := GitCheckoutDefaultBranch(); err != nil {
-		return err
-	}
-
-	if _, err := feature.DeleteBranch(); err != nil {
-		return err
-	}
-
-	if err := os.RemoveAll(GOGDir); err != nil {
-		return err
-	}
-
-	return nil
 }

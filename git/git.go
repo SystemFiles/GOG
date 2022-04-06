@@ -1,4 +1,4 @@
-package lib
+package git
 
 import (
 	"bufio"
@@ -7,60 +7,60 @@ import (
 	"regexp"
 	"strings"
 
-	"sykesdev.ca/gog/lib/semver"
+	"sykesdev.ca/gog/semver"
 )
 
-func GitHasUnstagedCommits() bool {
+func HasUnstagedCommits() bool {
 	cmd := exec.Command("git", "diff-index", "--quiet", "HEAD")
 	_, err := cmd.Output()
 
 	return err != nil
 }
 
-func GitHasUncommittedChanges() bool {
+func HasUncommittedChanges() bool {
 	cmd := exec.Command("bash", "-c", "git status --porcelain | egrep '^[A,M,D]'")
 	_, err := cmd.Output()
 
 	return err == nil
 }
 
-func GitIsValidRepo() bool {
+func IsValidRepo() bool {
 	cmd := exec.Command("git", "status")
 	_, err := cmd.Output()
 	
 	return err == nil
 }
 
-func GitBranchExists(branch string) bool {
+func BranchExists(branch string) bool {
 	cmd := exec.Command("bash", "-c", fmt.Sprintf("git branch | egrep %s", branch))
 	_, err := cmd.Output()
 
 	return err == nil
 }
 
-func GitGetCurrentBranch() (string, error) {
+func GetCurrentBranch() (string, error) {
 	cmd := exec.Command("bash", "-c", "git branch | grep '*' | cut -d' ' -f2")
 	stdout, err := cmd.CombinedOutput()
 
 	return string(stdout), err
 }
 
-func GitPullChanges() (string, error) {
+func PullChanges() (string, error) {
 	cmd := exec.Command("git", "pull")
 	stdout, err := cmd.CombinedOutput()
 	
 	return string(stdout), err
 }
 
-func GitOriginDefaultBranch() (string, error) {
+func OriginDefaultBranch() (string, error) {
 	defaultBranchCmd := exec.Command("bash", "-c", "git remote show origin | sed -n '/HEAD branch/s/.*: //p'")
 	defaultBranch, err := defaultBranchCmd.CombinedOutput()
 
 	return strings.TrimSpace(string(defaultBranch)), err
 }
 
-func GitCheckoutDefaultBranch() (string, error) {
-	defaultBranch, err := GitOriginDefaultBranch()
+func CheckoutDefaultBranch() (string, error) {
+	defaultBranch, err := OriginDefaultBranch()
 	if err != nil {
 		return defaultBranch, err
 	}
@@ -71,29 +71,21 @@ func GitCheckoutDefaultBranch() (string, error) {
 		return string(checkoutStdout), err
 	}
 
-	if stderr, err := GitPullChanges(); err != nil {
+	if stderr, err := PullChanges(); err != nil {
 		return stderr, err
 	}
 
 	return "", nil
 }
 
-func GitStageChanges() (string, error) {
+func StageChanges() (string, error) {
 	cmd := exec.Command("git", "add", "-A")
 	stderr, err := cmd.CombinedOutput()
 	
 	return string(stderr), err
 }
 
-func GitCommitChanges(feature *Feature, commitMessage string) (string, error) {
-	formattedMessage := fmt.Sprintf("%s %s", feature.Jira, commitMessage)
-	cmd := exec.Command("git", "commit", "-m", formattedMessage)
-	stderr, err := cmd.CombinedOutput()
-	
-	return string(stderr), err
-}
-
-func GitPushRemote(pushArgs string) (string, error) {
+func PushRemote(pushArgs string) (string, error) {
 	pushCommand := fmt.Sprintf("git push %s", pushArgs)
 	cmd := exec.Command("bash", "-c", pushCommand)
 	stderr, err := cmd.CombinedOutput()
@@ -101,17 +93,17 @@ func GitPushRemote(pushArgs string) (string, error) {
 	return string(stderr), err
 }
 
-func GitPushRemoteTagsOnly() (string, error) {
+func PushRemoteTagsOnly() (string, error) {
 	cmd := exec.Command("git", "push", "--tags", "--force")
 	stderr, err := cmd.CombinedOutput()
 	
 	return string(stderr), err
 }
 
-func GitOriginCurrentVersion() (semver.Semver, error) {
+func OriginCurrentVersion() (semver.Semver, error) {
 	version := semver.Semver{0,0,0}
 
-	defaultBranch, err := GitOriginDefaultBranch()
+	defaultBranch, err := OriginDefaultBranch()
 	if err != nil {
 		return version, err
 	}

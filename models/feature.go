@@ -1,4 +1,4 @@
-package lib
+package models
 
 import (
 	"bufio"
@@ -8,7 +8,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"sykesdev.ca/gog/lib/semver"
+	"sykesdev.ca/gog/common"
+	"sykesdev.ca/gog/git"
+	"sykesdev.ca/gog/semver"
 )
 
 type Feature struct {
@@ -24,7 +26,7 @@ func NewFeature(jira, comment string) (*Feature, error) {
 }
 
 func NewFeatureFromFile() (*Feature, error) {
-	_, GOGDir := WorkspacePaths()
+	_, GOGDir := common.WorkspacePaths()
 	
 	featureBytes, err := os.ReadFile(GOGDir + "/feature.json")
 	if err != nil {
@@ -51,7 +53,7 @@ func (f *Feature) UpdateTestCount() error {
 }
 
 func (f *Feature) BranchExists() bool {
-	return GitBranchExists(f.Jira)
+	return git.BranchExists(f.Jira)
 }
 
 func (f *Feature) CreateBranch() (string, error) {
@@ -62,8 +64,8 @@ func (f *Feature) CreateBranch() (string, error) {
 }
 
 func (f *Feature) DeleteBranch() (string, error) {
-	if cbStdout, err := GitGetCurrentBranch(); cbStdout == f.Jira {
-		GitCheckoutDefaultBranch()
+	if cbStdout, err := git.GetCurrentBranch(); cbStdout == f.Jira {
+		git.CheckoutDefaultBranch()
 	} else if err != nil {
 		return cbStdout, err
 	}
@@ -89,12 +91,12 @@ func (f *Feature) RemoteExists() bool {
 }
 
 func (f *Feature) PushChanges(commitMessage string) (string, error) {
-	if stderr, err := GitStageChanges(); err != nil {
+	if stderr, err := git.StageChanges(); err != nil {
 		return stderr, err
 	}
 
-	if GitHasUncommittedChanges() {
-		if stderr, err := GitCommitChanges(f, commitMessage); err != nil {
+	if git.HasUncommittedChanges() {
+		if stderr, err := f.CommitChanges(commitMessage); err != nil {
 			return stderr, err
 		}
 
@@ -103,12 +105,12 @@ func (f *Feature) PushChanges(commitMessage string) (string, error) {
 			pushArgs = fmt.Sprintf("--set-upstream origin %s", f.Jira)
 		} else {
 			// only pull changes if a remote exists
-			if stderr, err := GitPullChanges(); err != nil {
+			if stderr, err := git.PullChanges(); err != nil {
 				return stderr, err
 			}
 		}
 
-		return GitPushRemote(pushArgs)
+		return git.PushRemote(pushArgs)
 	}
 
 	return "", nil
@@ -153,10 +155,18 @@ func (f *Feature) ListChanges() ([]string, error) {
 	return changes, nil
 }
 
-func (f *Feature) Save() error {
-	workingDir, GOGDir := WorkspacePaths()
+func (f *Feature) CommitChanges(commitMessage string) (string, error) {
+	formattedMessage := fmt.Sprintf("%s %s", f.Jira, commitMessage)
+	cmd := exec.Command("git", "commit", "-m", formattedMessage)
+	stderr, err := cmd.CombinedOutput()
+	
+	return string(stderr), err
+}
 
-	if !PathExists(GOGDir) {
+func (f *Feature) Save() error {
+	workingDir, GOGDir := common.WorkspacePaths()
+
+	if !common.PathExists(GOGDir) {
 		if err := os.MkdirAll(GOGDir, 0700); err != nil {
 			return err
 		}
@@ -175,6 +185,24 @@ func (f *Feature) Save() error {
 	
 	_, err = featureFile.Write(featureBytes)
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (f *Feature) Clean() error {
+	_, GOGDir := common.WorkspacePaths()
+
+	if _, err := git.CheckoutDefaultBranch(); err != nil {
+		return err
+	}
+
+	if _, err := f.DeleteBranch(); err != nil {
+		return err
+	}
+
+	if err := os.RemoveAll(GOGDir); err != nil {
 		return err
 	}
 

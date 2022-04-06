@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"os"
 
-	"sykesdev.ca/gog/lib"
-	"sykesdev.ca/gog/lib/changelog"
-	"sykesdev.ca/gog/lib/semver"
+	"sykesdev.ca/gog/changelog"
+	"sykesdev.ca/gog/common"
+	"sykesdev.ca/gog/git"
+	"sykesdev.ca/gog/logging"
+	"sykesdev.ca/gog/models"
+	"sykesdev.ca/gog/semver"
 )
 
 type FinishAction string
@@ -86,18 +89,18 @@ func (fc *FinishCommand) Init(args []string) error {
 }
 
 func (fc *FinishCommand) Run() error {
-	workingDir, GOGDir := lib.WorkspacePaths()
+	workingDir, GOGDir := common.WorkspacePaths()
 
-	if !lib.GitIsValidRepo() {
+	if !git.IsValidRepo() {
 		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)
 	}
 
-	feature, err := lib.NewFeatureFromFile()
+	feature, err := models.NewFeatureFromFile()
 	if err != nil {
 		return fmt.Errorf("failed to read feature from associated feature file. %v", err)
 	}
 
-	currentVersion, err := lib.GitOriginCurrentVersion()
+	currentVersion, err := git.OriginCurrentVersion()
 	if err != nil {
 		return fmt.Errorf("failed to get current project version. %v", err)
 	}
@@ -123,7 +126,7 @@ func (fc *FinishCommand) Run() error {
 		return fmt.Errorf("failed to push changes to remote repository. %v \n%s", err, stderr)
 	}
 
-	stderr, err := lib.GitCheckoutDefaultBranch()
+	stderr, err := git.CheckoutDefaultBranch()
 	if err != nil {
 		return fmt.Errorf("failed to checkout default branch. %v \n%s", err, stderr)
 	}
@@ -136,11 +139,11 @@ func (fc *FinishCommand) Run() error {
 		return fmt.Errorf("failed to create release tags. %v \n%s", err, stderr)
 	}
 
-	if stderr, err := lib.GitPushRemote(""); err != nil {
+	if stderr, err := git.PushRemote(""); err != nil {
 		return fmt.Errorf("failed to push rebase to remote. %v \n%s", err, stderr)
 	}
 
-	if stderr, err := lib.GitPushRemoteTagsOnly(); err != nil {
+	if stderr, err := git.PushRemoteTagsOnly(); err != nil {
 		return fmt.Errorf("failed to publish release tags to remote. %v \n%s", err, stderr)
 	}
 
@@ -148,7 +151,7 @@ func (fc *FinishCommand) Run() error {
 		return fmt.Errorf("failed to delete existing feature branch for %s. %v \n%s", feature.Jira, err, stderr)
 	}
 
-	lib.GetLogger().Info(fmt.Sprintf("Successfully created new feature release for %s!", feature.Jira))
+	logging.GetLogger().Info(fmt.Sprintf("Successfully created new feature release for %s!", feature.Jira))
 
 	return nil
 }

@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"sykesdev.ca/gog/config"
 )
 
 type Semver [3]int
@@ -25,7 +27,7 @@ func Parse(versionString string) (Semver, error) {
 
 func MustParse(versionString string) (Semver) {
 	if !isValidSemver(versionString) {
-		panic(errors.New("cannot parse version string since it is not in a valid semver format"))
+		panic("cannot parse version string since it is not in a valid semver format")
 	}
 
 	numReg := regexp.MustCompile(`[0-9]+`)
@@ -58,9 +60,9 @@ func (s Semver) BumpPatch() Semver {
 }
 
 func (s Semver) Major() string {
-	return fmt.Sprintf("%v.x", s[0])
+	return fmt.Sprintf("%s%v.x", config.AppConfig().TagPrefix(), s[0])
 }
 
 func (s Semver) String() string {
-	return fmt.Sprintf("%v.%v.%v", s[0], s[1], s[2])
+	return fmt.Sprintf("%s%v.%v.%v", config.AppConfig().TagPrefix(), s[0], s[1], s[2])
 }

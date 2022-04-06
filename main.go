@@ -6,8 +6,10 @@ import (
 	"os"
 
 	"sykesdev.ca/gog/command"
-	"sykesdev.ca/gog/lib"
-	"sykesdev.ca/gog/lib/update"
+	"sykesdev.ca/gog/common"
+	"sykesdev.ca/gog/config"
+	"sykesdev.ca/gog/logging"
+	"sykesdev.ca/gog/update"
 )
 
 func root() error {
@@ -15,8 +17,8 @@ func root() error {
 		return errors.New("you must pass a sub-command\nUsage: gog <feature | push | finish> [options ...] [-h] [-help]")
 	}
 
-	if lib.StringInSlice(os.Args, "-v") || lib.StringInSlice(os.Args, "-version") {
-		lib.GetLogger().Info(fmt.Sprintf("Current Version of GOG: v%s", update.Version))
+	if common.StringInSlice(os.Args, "-v") || common.StringInSlice(os.Args, "-version") {
+		logging.GetLogger().Info(fmt.Sprintf("Current Version of GOG: v%s", update.Version))
 		return nil
 	}
 
@@ -31,7 +33,7 @@ func root() error {
 
 	for _, cmd := range cmds {
 		if cmd.Name() == subcommand || cmd.Alias() == subcommand {
-			if lib.StringInSlice(os.Args, "-h") || lib.StringInSlice(os.Args, "-help") {
+			if common.StringInSlice(os.Args, "-h") || common.StringInSlice(os.Args, "-help") {
 				cmd.Help()
 				return nil
 			}
@@ -46,8 +48,10 @@ func root() error {
 }
 
 func main() {
+	logging.GetLogger().SetupLogger(config.AppConfig().LogLevel())
+
 	if err := root(); err != nil {
-		lib.GetLogger().Error(err.Error())
+		logging.GetLogger().Error(err.Error())
 		os.Exit(1)
 	}
 }

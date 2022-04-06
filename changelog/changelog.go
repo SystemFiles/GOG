@@ -8,8 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"sykesdev.ca/gog/lib"
-	"sykesdev.ca/gog/lib/semver"
+	"sykesdev.ca/gog/common"
+	"sykesdev.ca/gog/logging"
+	"sykesdev.ca/gog/models"
+	"sykesdev.ca/gog/semver"
 )
 
 const changelogHeader = `
@@ -24,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 `
 
 func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
-	workingDir, _ := lib.WorkspacePaths()
+	workingDir, _ := common.WorkspacePaths()
 
 	f, err := os.OpenFile(workingDir + "/CHANGELOG.md", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
@@ -32,7 +34,7 @@ func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
 	}
 	defer f.Close()
 
-	lib.GetLogger().Debug("Creating changelog entry ...")
+	logging.GetLogger().Debug("Creating changelog entry ...")
 
 	var changelogLines []string
 	scanner := bufio.NewScanner(bufio.NewReader(f))
@@ -62,7 +64,7 @@ func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
 }
 
 func WriteChangelogToFile(lines []string) error {
-	workingDir, _ := lib.WorkspacePaths()
+	workingDir, _ := common.WorkspacePaths()
 
 	changelogFile, err := os.Create(workingDir + "/CHANGELOG.md")
 	if err != nil {
@@ -79,12 +81,12 @@ func WriteChangelogToFile(lines []string) error {
 }
 
 type ChangelogEntry struct {
-	Feature *lib.Feature
+	Feature *models.Feature
 	Version semver.Semver
 	Added bool
 }
 
-func NewChangelogEntry(feature *lib.Feature, version semver.Semver, added bool) (*ChangelogEntry) {
+func NewChangelogEntry(feature *models.Feature, version semver.Semver, added bool) (*ChangelogEntry) {
 	return &ChangelogEntry{ Feature: feature, Version: version, Added: added }
 }
 
@@ -109,7 +111,7 @@ func (e *ChangelogEntry) Lines() []string {
 
 	changes, err := e.Feature.ListChanges()
 	if err != nil {
-		lib.GetLogger().Fatal(fmt.Sprintf("failed to get feature changes from git. try pushing a change first. %v", err))
+		logging.GetLogger().Fatal(fmt.Sprintf("failed to get feature changes from git. try pushing a change first. %v", err))
 	}
 
 	lines = append(lines, changes...)
