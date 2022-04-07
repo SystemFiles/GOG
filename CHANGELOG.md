@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.3.4 ] - 2022-4-7 0:23:27
+
+> BENS-0015 Fix CD Pkg Version Reference
+
+### Changed
+
+- `463a99c` - BENS-0015 implemented cd fix
+
+
+
 ## [ 0.3.3 ] - 2022-4-7 0:18:43
 
 > BENS-0014 Install dependencies + App config
