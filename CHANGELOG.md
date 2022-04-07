@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.3.3 ] - 2022-4-7 0:18:43
+
+> BENS-0014 Install dependencies + App config
+
+### Changed
+
+- `4a1e872` - BENS-0014 cleaned up commands and removed some unused helpers
+- `0cae945` - BENS-0014 fixed default config file
+- `2559cbd` - BENS-0014 refactored packages and implemented config
+- `85eeabb` - BENS-0014 added git to required install dependencies
+
+
+
 ## [ 0.3.2 ] - 2022-4-4 19:35:21
 
 > BENS-0013 Update README + Install Scripts
