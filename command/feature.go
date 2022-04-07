@@ -87,6 +87,10 @@ func (fc *FeatureCommand) Run() error {
 
 	workingDir, GOGDir := common.WorkspacePaths()
 
+	if common.PathExists(GOGDir) {
+		return errors.New("GOG Directory already exists ... there could already be a feature here")
+	}
+
 	if !git.IsValidRepo() {
 		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)
 	}
@@ -96,31 +100,14 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("failed to create feature object. %v", err)
 	}
 
-	initial_branch, err := git.GetCurrentBranch()
-	if err != nil {
-		return fmt.Errorf("failed to get current branch of git repository. %v", err)
-	}
-
 	if feature.BranchExists() {
 		return fmt.Errorf("there is already a branch in this repo named %s", feature.Jira)
-	}
-
-	if git.HasUnstagedCommits() {
-		return fmt.Errorf("there is unstaged commits on your current branch (%s). For your safety, please stage or discard the changes to continue", initial_branch)
-	}
-
-	if git.HasUncommittedChanges() {
-		return fmt.Errorf("there are staged commits on your current branch (%s) which have not been committed. %v", initial_branch, err)
 	}
 
 	if !fc.FromFeature {
 		if stderr, err := git.CheckoutDefaultBranch(); err != nil {
 			return fmt.Errorf("failed to checkout default branch for repo. %v\n%s", err, stderr)
 		}
-	}
-
-	if common.PathExists(GOGDir) {
-		return fmt.Errorf("%s already exists ... there could already be a feature here. Please fix this and try again", GOGDir)
 	}
 
 	if stderr, err := feature.CreateBranch(); err != nil {

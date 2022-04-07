@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -58,10 +59,14 @@ func (pc *PushCommand) Init(args []string) error {
 }
 
 func (pc *PushCommand) Run() error {
-	workingDir, _ := common.WorkspacePaths()
+	workingDir, GOGDir := common.WorkspacePaths()
 
 	if !git.IsValidRepo() {
 		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)
+	}
+
+	if !common.PathExists(GOGDir + "/feature.json") {
+		return errors.New("feature file not found ... there may not be a GOG feature on this branch")
 	}
 
 	feature, err := models.NewFeatureFromFile()

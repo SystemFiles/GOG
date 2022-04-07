@@ -10,13 +10,6 @@ import (
 	"sykesdev.ca/gog/semver"
 )
 
-func HasUnstagedCommits() bool {
-	cmd := exec.Command("git", "diff-index", "--quiet", "HEAD")
-	_, err := cmd.Output()
-
-	return err != nil
-}
-
 func HasUncommittedChanges() bool {
 	cmd := exec.Command("bash", "-c", "git status --porcelain | egrep '^[A,M,D]'")
 	_, err := cmd.Output()
