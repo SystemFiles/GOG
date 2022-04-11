@@ -116,7 +116,7 @@ func (u *Updater) getReleaseForVersion(version semver.Semver) error {
 	}
 
 	for _, r := range releases {
-		if *r.TagName == version.String() {
+		if *r.TagName == version.NoPrefix() {
 			u.updateRelease = r
 			break
 		}
@@ -173,7 +173,7 @@ func (u *Updater) Update() error {
 	}
 	defer tarFile.Close()
 
-	tData, err := UntarBinary(tarFile, strings.ToLower(u.repoName))
+	tData, err := UnarchiveBinary(tarFile, strings.ToLower(u.repoName))
 	if err != nil {
 		return err
 	}
@@ -196,7 +196,7 @@ func (u *Updater) Update() error {
 		return err
 	}
 
-	err = os.Chmod(u.binaryLocation, 0755)
+	err = os.Chmod(u.binaryLocation, 0751)
 	if err != nil {
 		return err
 	}

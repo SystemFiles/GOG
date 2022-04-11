@@ -2,12 +2,33 @@ package update
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"errors"
 	"io"
+	"runtime"
+	"strings"
 )
 
-func UntarBinary(r io.Reader, binaryName string) (*tar.Reader, error) {
+func UnarchiveBinary(r io.Reader, binaryName string) (*bytes.Reader, error) {
+	switch strings.ToLower(runtime.GOOS) {
+	case "windows":
+		return unzipBinary()
+	case "linux", "darwin":
+		b, err := untarBinary(r, binaryName)
+		if err != nil {
+			return nil, err
+		}
+
+		return bytes.NewReader(b), nil
+	}
+}
+
+func unzipBinary(r io.Reader, binaryName string) ([]byte, error) {
+
+}
+
+func untarBinary(r io.Reader, binaryName string) ([]byte, error) {
 	gzr, err := gzip.NewReader(r)
 	if err != nil {
 		return nil, err
@@ -34,7 +55,12 @@ func UntarBinary(r io.Reader, binaryName string) (*tar.Reader, error) {
 			continue
 		case tar.TypeReg:
 			if header.Name == binaryName {
-				return tr, nil
+				var binary []byte
+				if _, err := tr.Read(binary); err != nil {
+					return nil, err
+				}
+
+				return binary, nil
 			}
 		}
 	}
