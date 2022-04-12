@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [ 0.3.5 ] - 2022-4-12 19:44:56
+
+> BENS-0018 Fix Bad Release
+
+### Changed
+
+- `71f7425` - BENS-0018 removed bad changelog entry
+- `1b4c27b` - BENS-0018 removed breaking prefix from config
+
+
+
 ## [ 0.3.4 ] - 2022-4-7 0:23:27
 
 > BENS-0015 Fix CD Pkg Version Reference
