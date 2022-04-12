@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ v0.3.5 ] - 2022-4-12 19:38:3
+
+> BENS-0017 Fix Version Check Compatibility
+
+### Changed
+
+- `42652ea` - BENS-0017 added missing noprefix to release asset getter
+- `359e428` - BENS-0017 fixed issue with latest tag capture compatibility
+
+
+
 ## [ 0.3.4 ] - 2022-4-7 0:23:27
 
 > BENS-0015 Fix CD Pkg Version Reference
