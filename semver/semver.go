@@ -66,3 +66,23 @@ func (s Semver) Major() string {
 func (s Semver) String() string {
 	return fmt.Sprintf("%s%v.%v.%v", config.AppConfig().TagPrefix(), s[0], s[1], s[2])
 }
+
+func (s Semver) Equal(o Semver) bool {
+	return s[0] == o[0] && s[1] == o[1] && s[2] == o[2]
+}
+
+func (s Semver) GreaterThan(o Semver) bool {
+	if s[0] > o[0] {
+		return true
+	}
+	
+	if s[0] == o[0] && s[1] > o[1] {
+		return true
+	}
+
+	if s[0] == o[0] && s[1] == o[1] && s[2] > o[2] {
+		return true
+	}
+
+	return false
+}

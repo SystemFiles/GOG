@@ -2,6 +2,7 @@ package git
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os/exec"
 	"regexp"
@@ -101,7 +102,7 @@ func OriginCurrentVersion() (semver.Semver, error) {
 		return version, err
 	}
 
-	tagCmd := exec.Command("bash", "-c", fmt.Sprintf("git tag --merged %s --sort=taggerdate | tail -r", defaultBranch))
+	tagCmd := exec.Command("bash", "-c", fmt.Sprintf("git tag --merged %s", defaultBranch))
 	tagOut, err := tagCmd.CombinedOutput()
 	if err != nil {
 		if strings.Contains(err.Error(), "128") {
@@ -116,19 +117,21 @@ func OriginCurrentVersion() (semver.Semver, error) {
 		return version, err
 	}
 
-	var latestTag string
-	tagScanner := bufio.NewScanner(strings.NewReader(string(tagOut)))
+	latestTag := [3]int{0,0,0}
+	tagScanner := bufio.NewScanner(bytes.NewReader(tagOut))
 	for tagScanner.Scan() {
 		tag := tagScanner.Text()
 		if matched := semverRegex.MatchString(tag); matched {
-			latestTag = tag
-			break
+			semverTag, err := semver.Parse(tag)
+			if err != nil {
+				return version, err
+			}
+
+			if semverTag.GreaterThan(latestTag) {
+				latestTag = semverTag
+			}
 		}
 	}
 
-	if latestTag == "" {
-		return version, nil
-	}
-
-	return semver.MustParse(latestTag), nil
+	return latestTag, nil
 }
