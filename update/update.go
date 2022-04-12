@@ -116,7 +116,7 @@ func (u *Updater) getReleaseForVersion(version semver.Semver) error {
 	}
 
 	for _, r := range releases {
-		if *r.TagName == version.String() {
+		if *r.TagName == version.NoPrefix() {
 			u.updateRelease = r
 			break
 		}
@@ -139,7 +139,7 @@ func (u *Updater) getLatestReleaseAsset() (*github.ReleaseAsset, error) {
 		if u.binaryOs == "windows" {
 			extension = "zip"
 		}
-		if strings.Contains(*asset.Name, fmt.Sprintf("%s-%s-%s-%s.%s", u.repoName, u.updateVersion, u.binaryOs, u.binaryArch, extension)) {
+		if strings.Contains(*asset.Name, fmt.Sprintf("%s-%s-%s-%s.%s", u.repoName, u.updateVersion.NoPrefix(), u.binaryOs, u.binaryArch, extension)) {
 			return asset, nil
 		}
 	}
@@ -196,7 +196,7 @@ func (u *Updater) Update() error {
 		return err
 	}
 
-	err = os.Chmod(u.binaryLocation, 0755)
+	err = os.Chmod(u.binaryLocation, 0751)
 	if err != nil {
 		return err
 	}

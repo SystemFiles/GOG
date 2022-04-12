@@ -67,6 +67,10 @@ func (s Semver) String() string {
 	return fmt.Sprintf("%s%v.%v.%v", config.AppConfig().TagPrefix(), s[0], s[1], s[2])
 }
 
+func (s Semver) NoPrefix() string {
+	return fmt.Sprintf("%v.%v.%v", s[0], s[1], s[2])
+}
+
 func (s Semver) Equal(o Semver) bool {
 	return s[0] == o[0] && s[1] == o[1] && s[2] == o[2]
 }
