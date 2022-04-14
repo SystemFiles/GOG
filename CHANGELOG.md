@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.3.6 ] - 2022-4-14 17:40:45
+
+> BENS-0019 Update Release Action Version
+
+### Changed
+
+- `b0f62c4` - BENS-0019 updated version for go-release action
+
+
+
 ## [ 0.3.5 ] - 2022-4-12 19:44:56
 
 > BENS-0018 Fix Bad Release
