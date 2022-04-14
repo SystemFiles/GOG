@@ -111,7 +111,7 @@ func (fc *FinishCommand) Run() error {
 
 	updatedVersion := bumpReleaseVersion(currentVersion, fc.action)
 
-	changelogEntry := changelog.NewChangelogEntry(feature, updatedVersion, fc.action == "MAJOR")
+	changelogEntry := changelog.NewChangelogEntry(feature, updatedVersion, fc.action == "MAJOR" || fc.action == "MINOR")
 
 	changelogLines, err := changelog.CreateChangeLogLines(changelogEntry)
 	if err != nil {
