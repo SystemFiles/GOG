@@ -31,7 +31,7 @@ jobs:
           GOG Release v${{ steps.get_version.outputs.VERSION }}
           
           For full change details read the [CHANGELOG](/CHANGELOG.md)
-    - uses: wangyoucao577/go-release-action@v1.25
+    - uses: wangyoucao577/go-release-action@v1.26
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
