@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.3.7 ] - 2022-4-14 17:55:17
+
+> BENS-0020 Added Changelog Entry Applied to Minor Releases
+
+### Changed
+
+- `1abd002` - BENS-0020 minor now counts as added functionality in changelogs
+
+
+
 ## [ 0.3.6 ] - 2022-4-14 17:40:45
 
 > BENS-0019 Update Release Action Version
