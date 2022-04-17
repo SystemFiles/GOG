@@ -2,12 +2,14 @@ package config
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"sync"
 
 	"gopkg.in/yaml.v2"
 	"sykesdev.ca/gog/common"
+	"sykesdev.ca/gog/logging"
 )
 
 var defaults = `
@@ -90,6 +92,19 @@ func (c *Configuration) TagPrefix() string {
 	return c.Application.TagPrefix
 }
 
+func (c *Configuration) SetTagPrefix(prefix string) {
+	c.Application.TagPrefix = prefix
+}
+
 func (c *Configuration) LogLevel() string {
 	return c.Logging.Level
+}
+
+func (c *Configuration) SetLogLevel(level string) error {
+	if !common.StringInSlice(logging.SeverityLevels, level) {
+		return errors.New("error setting log severity level. invalid severity level provided")
+	}
+
+	c.Logging.Level = level
+	return nil
 }

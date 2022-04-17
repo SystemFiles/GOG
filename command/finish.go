@@ -8,6 +8,7 @@ import (
 
 	"sykesdev.ca/gog/changelog"
 	"sykesdev.ca/gog/common"
+	"sykesdev.ca/gog/config"
 	"sykesdev.ca/gog/git"
 	"sykesdev.ca/gog/logging"
 	"sykesdev.ca/gog/models"
@@ -102,6 +103,10 @@ func (fc *FinishCommand) Run() error {
 	feature, err := models.NewFeatureFromFile()
 	if err != nil {
 		return fmt.Errorf("failed to read feature from associated feature file. %v", err)
+	}
+
+	if feature.CustomVersionPrefix != "" {
+		config.AppConfig().SetTagPrefix(feature.CustomVersionPrefix)
 	}
 
 	currentVersion, err := git.OriginCurrentVersion()

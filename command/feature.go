@@ -25,6 +25,7 @@ type FeatureCommand struct {
 	alias string
 	Jira string
 	Comment string
+	CustomVersionPrefix string
 	FromFeature bool
 }
 
@@ -35,6 +36,8 @@ func NewFeatureCommand() *FeatureCommand {
 		fs: flag.NewFlagSet("feature", flag.ContinueOnError),
 	}
 
+	fc.fs.StringVar(&fc.CustomVersionPrefix, "p", "", "optionally specifies a version prefix to use for this feature which will override existing prefix in global GOG config")
+	fc.fs.StringVar(&fc.CustomVersionPrefix, "prefix", "", "optionally specifies a version prefix to use for this feature which will override existing prefix in global GOG config")
 	fc.fs.BoolVar(&fc.FromFeature, "from-feature", false, "specifies if this feature will be based on the a current feature branch")
 
 	fc.fs.Usage = fc.Help
@@ -95,7 +98,7 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)
 	}
 
-	feature, err := models.NewFeature(fc.Jira, fc.Comment)
+	feature, err := models.NewFeature(fc.Jira, fc.Comment, fc.CustomVersionPrefix)
 	if err != nil {
 		return fmt.Errorf("failed to create feature object. %v", err)
 	}

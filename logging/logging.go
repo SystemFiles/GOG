@@ -18,12 +18,12 @@ var (
 	once sync.Once
 	instance Logging
 )
-var levels = []string{"INFO", "DEBUG", "WARN", "ERROR"}
+var SeverityLevels = []string{"INFO", "DEBUG", "WARN", "ERROR"}
 
 func GetLogger() *Logging {
 	once.Do(func() {
 		var lvl string
-		if common.StringInSlice(levels, os.Getenv("GOG_LOG_LEVEL")) {
+		if common.StringInSlice(SeverityLevels, os.Getenv("GOG_LOG_LEVEL")) {
 			lvl = os.Getenv("GOG_LOG_LEVEL")
 		} else {
 			lvl = "INFO"
@@ -36,7 +36,7 @@ func GetLogger() *Logging {
 }
 
 func (l *Logging) SetupLogger(level string) {
-	if common.StringInSlice(levels, strings.ToUpper(level)) {
+	if common.StringInSlice(SeverityLevels, strings.ToUpper(level)) {
 		l.Level = strings.ToUpper(level)
 	}
 }

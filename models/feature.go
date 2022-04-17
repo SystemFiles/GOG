@@ -16,11 +16,16 @@ import (
 type Feature struct {
 	Jira string `json:"jira"`
 	Comment string `json:"comment"`
+	CustomVersionPrefix string `json:"custom_prefix"`
 	TestCount int `json:"test_count"`
 }
 
-func NewFeature(jira, comment string) (*Feature, error) {
+func NewFeature(jira, comment, versionPrefix string) (*Feature, error) {
 	feat := &Feature{Jira: jira, Comment: comment, TestCount: 0}
+
+	if versionPrefix != "" {
+		feat.CustomVersionPrefix = versionPrefix
+	}
 
 	return feat, nil
 }
