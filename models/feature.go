@@ -3,12 +3,15 @@ package models
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"sykesdev.ca/gog/common"
+	"sykesdev.ca/gog/common/constants"
 	"sykesdev.ca/gog/git"
 	"sykesdev.ca/gog/semver"
 )
@@ -24,6 +27,9 @@ func NewFeature(jira, comment, versionPrefix string) (*Feature, error) {
 	feat := &Feature{Jira: jira, Comment: comment, TestCount: 0}
 
 	if versionPrefix != "" {
+		if matched, _ := regexp.MatchString(constants.VersionPrefixRegexp, versionPrefix); !matched {
+			return nil, errors.New("invalid version prefix specified for feature")
+		}
 		feat.CustomVersionPrefix = versionPrefix
 	}
 

@@ -105,7 +105,7 @@ func (fc *FinishCommand) Run() error {
 		return fmt.Errorf("failed to read feature from associated feature file. %v", err)
 	}
 
-	if feature.CustomVersionPrefix != "" {
+	if feature.CustomVersionPrefix != config.AppConfig().TagPrefix() && feature.CustomVersionPrefix != "" {
 		config.AppConfig().SetTagPrefix(feature.CustomVersionPrefix)
 	}
 

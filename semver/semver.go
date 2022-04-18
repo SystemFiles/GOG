@@ -7,13 +7,14 @@ import (
 	"strconv"
 	"strings"
 
+	"sykesdev.ca/gog/common/constants"
 	"sykesdev.ca/gog/config"
 )
 
 type Semver [3]int
 
 func isValidSemver(versionString string) bool {
-	matched, _ := regexp.Match(`^(v)?([0-9])+\.([0-9])+\.([0-9])+$`, []byte(versionString))
+	matched, _ := regexp.Match(constants.FullSemverRegexp, []byte(versionString))
 	return matched
 }
 

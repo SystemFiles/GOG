@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"sykesdev.ca/gog/common/constants"
 	"sykesdev.ca/gog/semver"
 )
 
@@ -94,6 +95,16 @@ func PushRemoteTagsOnly() (string, error) {
 	return string(stderr), err
 }
 
+func LatestTagName() (string, error) {
+	cmd := exec.Command("git", "describe", "--tags", "--abbrev=0")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	return string(out), nil
+}
+
 func OriginCurrentVersion() (semver.Semver, error) {
 	version := semver.Semver{0,0,0}
 
@@ -112,7 +123,7 @@ func OriginCurrentVersion() (semver.Semver, error) {
 		return version, err
 	}
 
-	semverRegex, err := regexp.Compile(`^(v)?([0-9])+\.([0-9])+\.([0-9])+$`)
+	semverRegex, err := regexp.Compile(constants.FullSemverRegexp)
 	if err != nil {
 		return version, err
 	}
