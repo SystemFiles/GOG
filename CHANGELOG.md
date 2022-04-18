@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.3.8 ] - 2022-4-18 16:1:2
+
+> BENS-0021 Version Prefix Local Override
+
+### Changed
+
+- `06f6825` - BENS-0021 implemented warning for prefix change
+- `42c4a9a` - BENS-0021 implemented warning when creating feature with diff. prefix than existing
+- `a2f11ec` - BENS-0021 Test Build (0)
+- `a77fa23` - BENS-0021 added version prefix override to feature create
+
+
+
 ## [ 0.3.7 ] - 2022-4-14 17:55:17
 
 > BENS-0020 Added Changelog Entry Applied to Minor Releases
