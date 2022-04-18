@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"sykesdev.ca/gog/common/constants"
+	"sykesdev.ca/gog/config"
 	"sykesdev.ca/gog/semver"
 )
 
@@ -103,6 +104,26 @@ func LatestTagName() (string, error) {
 	}
 
 	return string(out), nil
+}
+
+func ProjectExistingVersionPrefix() (string, error) {
+	tagName, err := LatestTagName()
+	if err != nil {
+		if strings.Contains(err.Error(), "128") {
+			return config.AppConfig().TagPrefix(), nil
+		}
+
+		return "", fmt.Errorf("could not tag information from remote origin. %v", err)
+	}
+
+	var existingPrefix string
+	if prefixSearch := regexp.MustCompile(constants.VersionPrefixRegexp).FindStringSubmatch(tagName); len(prefixSearch) > 0 {
+		existingPrefix = strings.TrimSpace(prefixSearch[0])
+	} else {
+		existingPrefix = ""
+	}
+
+	return existingPrefix, nil
 }
 
 func OriginCurrentVersion() (semver.Semver, error) {

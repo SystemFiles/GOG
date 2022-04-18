@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"sykesdev.ca/gog/common"
-	"sykesdev.ca/gog/common/constants"
 	"sykesdev.ca/gog/config"
 	"sykesdev.ca/gog/git"
 	"sykesdev.ca/gog/logging"
@@ -105,19 +104,16 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("failed to create feature object. %v", err)
 	}
 
-	tagName, err := git.LatestTagName()
+	if fc.CustomVersionPrefix != config.AppConfig().TagPrefix() && fc.CustomVersionPrefix != "" {
+		config.AppConfig().SetTagPrefix(feature.CustomVersionPrefix)
+	}
+
+	existingPrefix, err := git.ProjectExistingVersionPrefix()
 	if err != nil {
-		return fmt.Errorf("failed to get tag information from remote origin. %v", err)
+		return fmt.Errorf("failed to get projects existing version prefix. %v", err)
 	}
-	var existingPrefix string
-	if prefixSearch := regexp.MustCompile(constants.VersionPrefixRegexp).FindStringSubmatch(tagName); len(prefixSearch) > 0 {
-		existingPrefix = strings.TrimSpace(prefixSearch[0])
-	} else {
-		existingPrefix = ""
-	}
-	fmt.Println(existingPrefix)
-	if (feature.CustomVersionPrefix != "" && existingPrefix != feature.CustomVersionPrefix) || existingPrefix != config.AppConfig().TagPrefix() {
-		logging.GetLogger().Warn(fmt.Sprintf("feature version prefix does not match existing prefix for this git project (%s)", strings.TrimSpace(tagName)))
+	if existingPrefix != config.AppConfig().TagPrefix() {
+		logging.GetLogger().Warn(fmt.Sprintf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), existingPrefix))
 	}
 
 	if feature.BranchExists() {
