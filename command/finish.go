@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"sykesdev.ca/gog/changelog"
 	"sykesdev.ca/gog/common"
@@ -12,6 +13,7 @@ import (
 	"sykesdev.ca/gog/git"
 	"sykesdev.ca/gog/logging"
 	"sykesdev.ca/gog/models"
+	"sykesdev.ca/gog/prompt"
 	"sykesdev.ca/gog/semver"
 )
 
@@ -107,6 +109,19 @@ func (fc *FinishCommand) Run() error {
 
 	if feature.CustomVersionPrefix != config.AppConfig().TagPrefix() && feature.CustomVersionPrefix != "" {
 		config.AppConfig().SetTagPrefix(feature.CustomVersionPrefix)
+	}
+
+	existingPrefix, err := git.ProjectExistingVersionPrefix()
+	if err != nil {
+		return fmt.Errorf("failed to get projects existing version prefix. %v", err)
+	}
+	if existingPrefix != config.AppConfig().TagPrefix() {
+		logging.GetLogger().Warn(fmt.Sprintf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), existingPrefix))
+		if c := prompt.String("continue with feature release (Y/n)? "); strings.ToUpper(c) != "Y" {
+			logging.GetLogger().Info("safely exiting feature release")
+			return nil
+		}
+		logging.GetLogger().Info("continuing with feature release against warning")
 	}
 
 	currentVersion, err := git.OriginCurrentVersion()

@@ -13,6 +13,7 @@ import (
 	"sykesdev.ca/gog/git"
 	"sykesdev.ca/gog/logging"
 	"sykesdev.ca/gog/models"
+	"sykesdev.ca/gog/prompt"
 )
 
 func FeatureUsage() {
@@ -37,7 +38,6 @@ func NewFeatureCommand() *FeatureCommand {
 		fs: flag.NewFlagSet("feature", flag.ContinueOnError),
 	}
 
-	fc.fs.StringVar(&fc.CustomVersionPrefix, "p", "", "optionally specifies a version prefix to use for this feature which will override existing prefix in global GOG config")
 	fc.fs.StringVar(&fc.CustomVersionPrefix, "prefix", "", "optionally specifies a version prefix to use for this feature which will override existing prefix in global GOG config")
 	fc.fs.BoolVar(&fc.FromFeature, "from-feature", false, "specifies if this feature will be based on the a current feature branch")
 
@@ -114,6 +114,12 @@ func (fc *FeatureCommand) Run() error {
 	}
 	if existingPrefix != config.AppConfig().TagPrefix() {
 		logging.GetLogger().Warn(fmt.Sprintf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), existingPrefix))
+		if c := prompt.String("continue with feature creation (Y/n)? "); strings.ToUpper(c) != "Y" {
+			logging.GetLogger().Info("safely exiting feature creation")
+			logging.GetLogger().Info("if you wish to use the existing version prefix, but it is not set in the global config for GOG, you can pass it using the -prefix flag (see -help for details)")
+			return nil
+		}
+		logging.GetLogger().Info("continuing with feature creation against warning")
 	}
 
 	if feature.BranchExists() {
