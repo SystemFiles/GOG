@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.4.0 ] - 2022-4-23 16:7:4
+
+> BENS-0022 Version Prefix Warning and Prompt
+
+### Added
+
+- `f047226` - BENS-0022 added demo and detailed usage to README
+- `3a6d62b` - BENS-0022 warning for prefix mismatch from existing
+
+
+
 ## [ 0.3.8 ] - 2022-4-18 16:1:2
 
 > BENS-0021 Version Prefix Local Override
