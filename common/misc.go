@@ -13,7 +13,7 @@ func GitProjectRoot() (string, error) {
 		return "", err
 	}
 
-	return string(stdout), nil
+	return strings.TrimSpace(strings.ReplaceAll(string(stdout), "\n", "")), nil
 }
 
 func StringInSlice(slice []string, value string) (bool) {
@@ -26,11 +26,11 @@ func StringInSlice(slice []string, value string) (bool) {
 }
 
 func GOGPath() (string) {
-	repoRoot, err := GitProjectRoot()
+	projectRoot, err := GitProjectRoot()
 	if err != nil {
 		panic("cannot determine GOG configuration path since we cannot find the root of this git repo")
 	}
-	GOGDir := strings.TrimSpace(strings.ReplaceAll(string(repoRoot), "\n", "")) + "/.gog"
+	GOGDir := projectRoot + "/.gog"
 
 	return GOGDir
 }
