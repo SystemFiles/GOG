@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installation Script For GOG on Linux/Darwin
+# Standalone installation script For GOG on Linux/Darwin
 
 set -e
 
@@ -64,5 +64,5 @@ GOG installation was successful!
 -------------- [ NOTICE ] --------------
 
 - Ensure that '$HOME/bin' is added to your PATH to finalize the installation
-- GOG has updates built-in and should be updated through the use of: gog update [-tag VERSION]
+- GOG has updates built-in and should be updated through the use of: gog update [-tag VERSION (optional)]
 EOM

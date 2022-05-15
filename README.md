@@ -6,7 +6,7 @@ GOG is an Opinionated Git workflow CLI tool written in Golang to help developers
 
 ## Installation
 
-### Linux / MAC OSX
+### Linux / MAC OSX (darwin)
 
 ```bash
 
@@ -37,16 +37,16 @@ Usage: gog (feature | feat) <jira> <comment> [-from-feature] [-h] [-help]
 -------====== Feature Arguments ======-------
 
 jira
-        specifies the JIRA issue we are working under
+      specifies the JIRA issue we are working under
 comment
-        specifies a human-readable comment describing the issue/feature
+      specifies a human-readable comment describing the issue/feature
 
 ------================================------
 
   -from-feature
-        specifies if this feature will be based on the a current feature branch
+      specifies if this feature will be based on the a current feature branch
   -prefix string
-        optionally specifies a version prefix to use for this feature which will override existing prefix in global GOG config
+      optionally specifies a version prefix to use for this feature which will override existing prefix in global GOG config
 
 -------================================-------
 
@@ -61,7 +61,7 @@ Usage: gog (push | p) [message] [-h] [-help]
 -------====== Push Arguments ======-------
 
 message
-        specifies a commit message for this feature push
+      specifies a commit message for this feature push
 
 -------================================-------
 
@@ -76,11 +76,11 @@ Usage: gog (finish | fin) (-major | -minor | -patch) [-h] [-help]
 -------====== Finish Arguments ======-------
 
   -major
-        specifies that in this freature you make incompatible API changes (breaking changes)
+      specifies that in this freature you make incompatible API changes (breaking changes)
   -minor
-        specifies that in this feature you add functionality in a backwards compatible manner (non-breaking)
+      specifies that in this feature you add functionality in a backwards compatible manner (non-breaking)
   -patch
-        specifies that in this feature you make backwards compatible bug fixes small backwards compatible updates
+      specifies that in this feature you make backwards compatible bug fixes small backwards compatible updates
 
 -------================================-------
 
