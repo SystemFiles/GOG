@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.4.1 ] - 2022-5-15 19:50:48
+
+> BENS-0023 Fix Feature Push in Nested Folder Structure
+
+### Changed
+
+- `9d756f1` - BENS-0023 ensured lead and trailing spaces removed from GOGDir
+- `7200469` - BENS-0023 implemented fix for GOG feature discovery
+
+
+
 ## [ 0.4.0 ] - 2022-4-23 16:7:4
 
 > BENS-0022 Version Prefix Warning and Prompt
