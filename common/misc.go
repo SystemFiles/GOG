@@ -35,7 +35,7 @@ func WorkspacePaths() (string, string) {
 	if err != nil {
 		panic("cannot determine GOG configuration path since we cannot find the root of this git repo")
 	}
-	GOGDir := strings.ReplaceAll(string(repoRoot), "\n", "") + "/.gog"
+	GOGDir := strings.TrimSpace(strings.ReplaceAll(string(repoRoot), "\n", "")) + "/.gog"
 
 	return workingDir, GOGDir
 }
