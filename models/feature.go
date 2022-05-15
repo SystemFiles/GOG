@@ -37,7 +37,7 @@ func NewFeature(jira, comment, versionPrefix string) (*Feature, error) {
 }
 
 func NewFeatureFromFile() (*Feature, error) {
-	_, GOGDir := common.WorkspacePaths()
+	GOGDir := common.GOGPath()
 	
 	featureBytes, err := os.ReadFile(GOGDir + "/feature.json")
 	if err != nil {
@@ -175,7 +175,7 @@ func (f *Feature) CommitChanges(commitMessage string) (string, error) {
 }
 
 func (f *Feature) Save() error {
-	workingDir, GOGDir := common.WorkspacePaths()
+	GOGDir := common.GOGPath()
 
 	if !common.PathExists(GOGDir) {
 		if err := os.MkdirAll(GOGDir, 0700); err != nil {
@@ -183,7 +183,7 @@ func (f *Feature) Save() error {
 		}
 	}
 
-	featureFile, err := os.Create(workingDir + "/.gog/feature.json")
+	featureFile, err := os.Create(GOGDir + "/feature.json")
 	if err != nil {
 		return err
 	}
@@ -203,7 +203,7 @@ func (f *Feature) Save() error {
 }
 
 func (f *Feature) Clean() error {
-	_, GOGDir := common.WorkspacePaths()
+	GOGDir := common.GOGPath()
 
 	if _, err := git.CheckoutDefaultBranch(); err != nil {
 		return err

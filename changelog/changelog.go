@@ -26,9 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 `
 
 func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
-	workingDir, _ := common.WorkspacePaths()
+	projectRoot, err := common.GitProjectRoot()
+	if err != nil {
+		return nil, err
+	}
 
-	f, err := os.OpenFile(workingDir + "/CHANGELOG.md", os.O_RDWR|os.O_CREATE, 0644)
+	f, err := os.OpenFile(projectRoot + "/CHANGELOG.md", os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return []string{}, err
 	}
@@ -64,9 +67,12 @@ func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
 }
 
 func WriteChangelogToFile(lines []string) error {
-	workingDir, _ := common.WorkspacePaths()
+	projectRoot, err := common.GitProjectRoot()
+	if err != nil {
+		return err
+	}
 
-	changelogFile, err := os.Create(workingDir + "/CHANGELOG.md")
+	changelogFile, err := os.Create(projectRoot + "/CHANGELOG.md")
 	if err != nil {
 		return err
 	}

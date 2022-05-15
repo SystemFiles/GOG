@@ -89,14 +89,14 @@ func (fc *FeatureCommand) Run() error {
 		return errors.New("invalid Jira format ... example of a valid format would be 'JIRA-0023'")
 	}
 
-	workingDir, GOGDir := common.WorkspacePaths()
+	if !git.IsValidRepo() {
+		return fmt.Errorf("the current directory is not a valid git repository")
+	}
+
+	GOGDir := common.GOGPath()
 
 	if common.PathExists(GOGDir) {
 		return errors.New("GOG Directory already exists ... there could already be a feature here")
-	}
-
-	if !git.IsValidRepo() {
-		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)
 	}
 
 	feature, err := models.NewFeature(fc.Jira, fc.Comment, fc.CustomVersionPrefix)

@@ -59,20 +59,19 @@ func (pc *PushCommand) Init(args []string) error {
 }
 
 func (pc *PushCommand) Run() error {
-	workingDir, GOGDir := common.WorkspacePaths()
-
 	if !git.IsValidRepo() {
-		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)
+		return fmt.Errorf("the current directory is not a valid git repository")
 	}
 
-	fmt.Println(GOGDir + "/feature.json")
+	GOGDir := common.GOGPath()
+
 	if !common.PathExists(GOGDir + "/feature.json") {
 		return errors.New("feature file not found ... there may not be a GOG feature on this branch")
 	}
 
 	feature, err := models.NewFeatureFromFile()
 	if err != nil {
-		return fmt.Errorf("failed to read feature from features file (%s). %v", workingDir + "/.gog/feature.json", err)
+		return fmt.Errorf("failed to read feature from features file (%s). %v", GOGDir + "/feature.json", err)
 	}
 	defer feature.Save()
 	

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func gitLocalRepositoryRoot() (string, error) {
+func GitProjectRoot() (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	stdout, err := cmd.CombinedOutput()
 	if err != nil {
@@ -25,19 +25,14 @@ func StringInSlice(slice []string, value string) (bool) {
 	return false
 }
 
-func WorkspacePaths() (string, string) {
-	workingDir, err := os.Getwd()
-	if err != nil {
-		panic("could not get current working directory")
-	}
-	
-	repoRoot, err := gitLocalRepositoryRoot()
+func GOGPath() (string) {
+	repoRoot, err := GitProjectRoot()
 	if err != nil {
 		panic("cannot determine GOG configuration path since we cannot find the root of this git repo")
 	}
 	GOGDir := strings.TrimSpace(strings.ReplaceAll(string(repoRoot), "\n", "")) + "/.gog"
 
-	return workingDir, GOGDir
+	return GOGDir
 }
 
 func PathExists(path string) bool {

@@ -92,11 +92,11 @@ func (fc *FinishCommand) Init(args []string) error {
 }
 
 func (fc *FinishCommand) Run() error {
-	workingDir, GOGDir := common.WorkspacePaths()
-
 	if !git.IsValidRepo() {
-		return fmt.Errorf("the current directory (%s) is not a valid git repository", workingDir)
+		return fmt.Errorf("the current directory is not a valid git repository")
 	}
+
+	GOGDir := common.GOGPath()
 
 	if !common.PathExists(GOGDir + "/feature.json") {
 		return errors.New("feature file not found ... there may not be a GOG feature on this branch")
