@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.4.2 ] - 2022-5-15 21:47:26
+
+> BENS-0024 Fixup Related to BENS-0023
+
+### Changed
+
+- `25c03ea` - BENS-0024 fixed project root output formatting
+- `1cfedb5` - BENS-0024 fixups to documentation and install script
+- `4b425c3` - BENS-0024 changed order for project root check and refactored common functions
+
+
+
 ## [ 0.4.1 ] - 2022-5-15 19:50:48
 
 > BENS-0023 Fix Feature Push in Nested Folder Structure
