@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v43/github"
-	"sykesdev.ca/gog/semver"
+	"sykesdev.ca/gog/internal/semver"
 )
 
 var ctx = context.Background()

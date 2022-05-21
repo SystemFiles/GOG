@@ -1,4 +1,4 @@
-package command
+package cmd
 
 type Runnable interface {
 	Init([]string) error

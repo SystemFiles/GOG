@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"sykesdev.ca/gog/common"
-	"sykesdev.ca/gog/logging"
-	"sykesdev.ca/gog/models"
-	"sykesdev.ca/gog/semver"
+	"sykesdev.ca/gog/internal/common"
+	"sykesdev.ca/gog/internal/logging"
+	"sykesdev.ca/gog/internal/models"
+	"sykesdev.ca/gog/internal/semver"
 )
 
 const changelogHeader = `

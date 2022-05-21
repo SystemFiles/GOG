@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"sykesdev.ca/gog/common"
+	"sykesdev.ca/gog/internal/common"
 )
 
 type Logging struct {

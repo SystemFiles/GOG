@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"sykesdev.ca/gog/command"
-	"sykesdev.ca/gog/common"
+	"sykesdev.ca/gog/cmd"
 	"sykesdev.ca/gog/config"
-	"sykesdev.ca/gog/logging"
-	"sykesdev.ca/gog/update"
+	"sykesdev.ca/gog/internal/common"
+	"sykesdev.ca/gog/internal/logging"
+	"sykesdev.ca/gog/internal/update"
 )
 
 func root() error {
@@ -22,11 +22,12 @@ func root() error {
 		return nil
 	}
 
-	cmds := []command.Runnable {
-		command.NewFeatureCommand(),
-		command.NewPushCommand(),
-		command.NewFinishCommand(),
-		command.NewUpdateSelfCommand(),
+	cmds := []cmd.Runnable {
+		cmd.NewFeatureCommand(),
+		cmd.NewPushCommand(),
+		cmd.NewFinishCommand(),
+		cmd.NewUpdateSelfCommand(),
+		cmd.NewSimplePushCommand(),
 	}
 
 	subcommand := os.Args[1]

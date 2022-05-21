@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"gopkg.in/yaml.v2"
-	"sykesdev.ca/gog/common"
-	"sykesdev.ca/gog/logging"
+	"sykesdev.ca/gog/internal/common"
+	"sykesdev.ca/gog/internal/logging"
 )
 
 var defaults = `

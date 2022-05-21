@@ -1,4 +1,4 @@
-package command
+package cmd
 
 import (
 	"errors"
@@ -8,12 +8,12 @@ import (
 	"regexp"
 	"strings"
 
-	"sykesdev.ca/gog/common"
 	"sykesdev.ca/gog/config"
-	"sykesdev.ca/gog/git"
-	"sykesdev.ca/gog/logging"
-	"sykesdev.ca/gog/models"
-	"sykesdev.ca/gog/prompt"
+	"sykesdev.ca/gog/internal/common"
+	"sykesdev.ca/gog/internal/git"
+	"sykesdev.ca/gog/internal/logging"
+	"sykesdev.ca/gog/internal/models"
+	"sykesdev.ca/gog/internal/prompt"
 )
 
 func FeatureUsage() {
@@ -130,6 +130,10 @@ func (fc *FeatureCommand) Run() error {
 		if stderr, err := git.CheckoutDefaultBranch(); err != nil {
 			return fmt.Errorf("failed to checkout default branch for repo. %v\n%s", err, stderr)
 		}
+	}
+
+	if stderr, err := git.PullChanges(); err != nil {
+		return fmt.Errorf("failed to pull some changes before creating the new feature. %v\n%s", err, stderr)
 	}
 
 	if stderr, err := feature.CreateBranch(); err != nil {

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"sykesdev.ca/gog/common/constants"
 	"sykesdev.ca/gog/config"
+	"sykesdev.ca/gog/internal/common/constants"
 )
 
 type Semver [3]int

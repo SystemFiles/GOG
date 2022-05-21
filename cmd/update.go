@@ -1,12 +1,12 @@
-package command
+package cmd
 
 import (
 	"flag"
 	"fmt"
 	"os"
 
-	"sykesdev.ca/gog/logging"
-	"sykesdev.ca/gog/update"
+	"sykesdev.ca/gog/internal/logging"
+	"sykesdev.ca/gog/internal/update"
 )
 
 type UpdateSelfCommand struct {

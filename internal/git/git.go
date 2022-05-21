@@ -8,13 +8,13 @@ import (
 	"regexp"
 	"strings"
 
-	"sykesdev.ca/gog/common/constants"
 	"sykesdev.ca/gog/config"
-	"sykesdev.ca/gog/semver"
+	"sykesdev.ca/gog/internal/common/constants"
+	"sykesdev.ca/gog/internal/semver"
 )
 
 func HasUncommittedChanges() bool {
-	cmd := exec.Command("bash", "-c", "git status --porcelain | egrep '^[A,M,D]'")
+	cmd := exec.Command("bash", "-c", "git status --porcelain | egrep '^[A,M,D,R]'")
 	_, err := cmd.Output()
 
 	return err == nil
@@ -39,6 +39,13 @@ func GetCurrentBranch() (string, error) {
 	stdout, err := cmd.CombinedOutput()
 
 	return string(stdout), err
+}
+
+func Commit(message string) (string, error) {
+	cmd := exec.Command("git", "commit", "-m", message)
+	stderr, err := cmd.CombinedOutput()
+
+	return string(stderr), err
 }
 
 func PullChanges() (string, error) {
@@ -87,6 +94,23 @@ func PushRemote(pushArgs string) (string, error) {
 	stderr, err := cmd.CombinedOutput()
 
 	return string(stderr), err
+}
+
+func GetPreviousCommitMessage(count int) ([]string, error) {
+	cmd := exec.Command("git", "log", "-" + fmt.Sprint(count), "--pretty=%B")
+	stdout, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	var commits []string
+	for _, m := range strings.Split(string(stdout), "\n") {
+		if m != "" {
+			commits = append(commits, m)
+		}
+	}
+
+	return commits, nil
 }
 
 func PushRemoteTagsOnly() (string, error) {

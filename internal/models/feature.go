@@ -10,10 +10,10 @@ import (
 	"regexp"
 	"strings"
 
-	"sykesdev.ca/gog/common"
-	"sykesdev.ca/gog/common/constants"
-	"sykesdev.ca/gog/git"
-	"sykesdev.ca/gog/semver"
+	"sykesdev.ca/gog/internal/common"
+	"sykesdev.ca/gog/internal/common/constants"
+	"sykesdev.ca/gog/internal/git"
+	"sykesdev.ca/gog/internal/semver"
 )
 
 type Feature struct {
@@ -106,12 +106,12 @@ func (f *Feature) PushChanges(commitMessage string) (string, error) {
 		return stderr, err
 	}
 
+	var pushArgs string
 	if git.HasUncommittedChanges() {
 		if stderr, err := f.CommitChanges(commitMessage); err != nil {
 			return stderr, err
 		}
 
-		var pushArgs string
 		if !f.RemoteExists() {
 			pushArgs = fmt.Sprintf("--set-upstream origin %s", f.Jira)
 		} else {
@@ -120,11 +120,9 @@ func (f *Feature) PushChanges(commitMessage string) (string, error) {
 				return stderr, err
 			}
 		}
-
-		return git.PushRemote(pushArgs)
 	}
 
-	return "", nil
+	return git.PushRemote(pushArgs)
 }
 
 func (f *Feature) CreateReleaseTags(version semver.Semver) (string, error) {
@@ -168,10 +166,8 @@ func (f *Feature) ListChanges() ([]string, error) {
 
 func (f *Feature) CommitChanges(commitMessage string) (string, error) {
 	formattedMessage := fmt.Sprintf("%s %s", f.Jira, commitMessage)
-	cmd := exec.Command("git", "commit", "-m", formattedMessage)
-	stderr, err := cmd.CombinedOutput()
-	
-	return string(stderr), err
+
+	return git.Commit(formattedMessage)
 }
 
 func (f *Feature) Save() error {

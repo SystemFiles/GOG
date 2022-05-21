@@ -1,4 +1,4 @@
-package command
+package cmd
 
 import (
 	"errors"
@@ -7,14 +7,14 @@ import (
 	"os"
 	"strings"
 
-	"sykesdev.ca/gog/changelog"
-	"sykesdev.ca/gog/common"
 	"sykesdev.ca/gog/config"
-	"sykesdev.ca/gog/git"
-	"sykesdev.ca/gog/logging"
-	"sykesdev.ca/gog/models"
-	"sykesdev.ca/gog/prompt"
-	"sykesdev.ca/gog/semver"
+	"sykesdev.ca/gog/internal/changelog"
+	"sykesdev.ca/gog/internal/common"
+	"sykesdev.ca/gog/internal/git"
+	"sykesdev.ca/gog/internal/logging"
+	"sykesdev.ca/gog/internal/models"
+	"sykesdev.ca/gog/internal/prompt"
+	"sykesdev.ca/gog/internal/semver"
 )
 
 type FinishAction string
