@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/google/go-github/v43/github"
+	"sykesdev.ca/gog/internal/logging"
 	"sykesdev.ca/gog/internal/semver"
 )
 
@@ -39,6 +40,8 @@ func NewUpdater(tag string) (*Updater, error) {
 		panic("failed to get executable path")
 	}
 
+	logging.Instance().Debugf("captured GOG executable location from PATH: %s", binaryPath)
+
 	u := &Updater{
 		client: github.NewClient(nil),
 		repoOwner: "SystemFiles",
@@ -64,6 +67,8 @@ func NewUpdater(tag string) (*Updater, error) {
 	if err := u.getReleaseForVersion(u.updateVersion); err != nil {
 		return nil, err
 	}
+
+	logging.Instance().Debugf("created the new updater instance: %s", u)
 
 	return u, nil
 }
@@ -106,6 +111,8 @@ func (u *Updater) getLatestVersion() (semver.Semver, error) {
 		return semver.Semver{}, errors.New("failed to list project releases. " + err.Error())
 	}
 
+	logging.Instance().Debugf("latest GOG version captured: %s", *releases[0].TagName)
+
 	return semver.MustParse(*releases[0].TagName), nil
 }
 
@@ -114,6 +121,8 @@ func (u *Updater) getReleaseForVersion(version semver.Semver) error {
 	if err != nil {
 		return errors.New("failed to list project releases. " + err.Error())
 	}
+
+	logging.Instance().Debugf("Full list of GOG releases from Github: %v", releases)
 
 	for _, r := range releases {
 		if *r.TagName == version.NoPrefix() {
@@ -126,6 +135,8 @@ func (u *Updater) getReleaseForVersion(version semver.Semver) error {
 		return fmt.Errorf("failed to locate the specified version (%s) in project releases", version)
 	}
 
+	logging.Instance().Debugf("target release for GOG update: %s", u.updateRelease)
+
 	return nil
 }
 
@@ -134,12 +145,18 @@ func (u *Updater) getLatestReleaseAsset() (*github.ReleaseAsset, error) {
 		return nil, errors.New("cannot get latest release asset since 'latestRelease' is not defined")
 	}
 
+	logging.Instance().Debug("searching project release assets for compatible binary release")
+
 	for _, asset := range u.updateRelease.Assets {
+		logging.Instance().Debugf("processing asset: %s", *asset.Name)
+
 		extension := "tar.gz"
 		if u.binaryOs == "windows" {
 			extension = "zip"
 		}
+
 		if strings.Contains(*asset.Name, fmt.Sprintf("%s-%s-%s-%s.%s", u.repoName, u.updateVersion.NoPrefix(), u.binaryOs, u.binaryArch, extension)) {
+			logging.Instance().Debugf("found matching release asset for the current system: %s", *asset.Name)
 			return asset, nil
 		}
 	}
@@ -154,10 +171,14 @@ func (u *Updater) downloadLatestReleaseBinary() (io.ReadCloser, error) {
 	}
 	downloadUrl := asset.GetBrowserDownloadURL()
 
+	logging.Instance().Debugf("download URL for GOG release asset: %s", downloadUrl)
+
 	resp, err := http.Get(downloadUrl)
   if err != nil {
     return nil, err
   }
+
+	logging.Instance().Debugf("download completed for GOG release asset (%s). Downloaded total: %d bytes", *asset.Name, resp.ContentLength)
 
 	return resp.Body, nil
 }
@@ -167,24 +188,34 @@ func (u *Updater) Update() error {
 		return errors.New("GOG is already at the latest version")
 	}
 
+	logging.Instance().Debug("begining GOG release update")
+
 	tarFile, err := u.downloadLatestReleaseBinary()
 	if err != nil {
 		return err
 	}
 	defer tarFile.Close()
 
+	logging.Instance().Debugf("GOG release %s download completed", u.updateVersion)
+
 	tData, err := UntarBinary(tarFile, strings.ToLower(u.repoName))
 	if err != nil {
 		return err
 	}
 
-	// remove current go binary backup (if exists)
+	logging.Instance().Debug("GOG release archive expanded")
+
+	// remove current gog binary backup (if exists)
 	os.Remove(u.binaryLocation + ".old")
 
-	// rename current go binary to keep as backup
+	logging.Instance().Debug("removed old gog backup")
+
+	// rename current gog binary to keep as backup
 	os.Rename(u.binaryLocation, u.binaryLocation + ".old")
 
-	// copy updated binary to replace existing go binary
+	logging.Instance().Debug("created new gog backup")
+
+	// copy updated binary to replace existing gog binary
 	out, err := os.Create(u.binaryLocation)
 	if err != nil {
 		return err
@@ -200,6 +231,8 @@ func (u *Updater) Update() error {
 	if err != nil {
 		return err
 	}
+
+	logging.Instance().Debug("new gog release update has been completed successfully")
 
 	return nil
 }

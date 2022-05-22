@@ -12,6 +12,7 @@ import (
 	"sykesdev.ca/gog/internal/common"
 	"sykesdev.ca/gog/internal/common/constants"
 	"sykesdev.ca/gog/internal/git"
+	"sykesdev.ca/gog/internal/logging"
 	"sykesdev.ca/gog/internal/semver"
 )
 
@@ -32,6 +33,8 @@ func NewFeature(jira, comment, versionPrefix string) (*Feature, error) {
 		feat.CustomVersionPrefix = versionPrefix
 	}
 
+	logging.Instance().Debugf("created new feature: %s", feat)
+
 	return feat, nil
 }
 
@@ -49,6 +52,8 @@ func NewFeatureFromFile() (*Feature, error) {
 		return nil, err
 	}
 
+	logging.Instance().Debugf("created feature instance from file: %s", feature)
+
 	return feature, nil
 }
 
@@ -58,6 +63,8 @@ func (f *Feature) UpdateTestCount() error {
 	if err := f.Save(); err != nil {
 		return err
 	}
+
+	logging.Instance().Debugf("updated test build count from %d -> %d", f.TestCount - 1, f.TestCount)
 
 	return nil
 }
@@ -72,6 +79,8 @@ func (f *Feature) DeleteBranch() (string, error) {
 	} else if err != nil {
 		return cbStdout, err
 	}
+
+	logging.Instance().Debugf("deleting feature branch: %s", f.Jira)
 
 	return git.DeleteBranch(f.Jira)
 }
@@ -91,9 +100,14 @@ func (f *Feature) PushChanges(commitMessage string) (string, error) {
 
 	var pushArgs string
 	if git.HasUncommittedChanges() {
+
+		logging.Instance().Debug("feature has uncommitted changes. committing them now")
+
 		if stderr, err := f.CommitChanges(commitMessage); err != nil {
 			return stderr, err
 		}
+
+		logging.Instance().Debug("changes committed. pushing changes to remote")
 
 		if !f.RemoteExists() {
 			pushArgs = fmt.Sprintf("--set-upstream origin %s", f.Jira)
@@ -115,8 +129,12 @@ func (f *Feature) CreateReleaseTags(version semver.Semver) (string, error) {
 		return tagStdout, err
 	}
 
+	logging.Instance().Debugf("created release tag (%s) for feature: %s", version, f)
+
 	tagMessage = fmt.Sprintf("(%s): %s %s", version.Major(), f.Jira, f.Comment)
 	tagStdout, err = git.CreateTag(version.Major(), tagMessage, true)
+
+	logging.Instance().Debugf("created release tag (%s) for feature: %s", version.Major(), f)
 	
 	return tagStdout, err
 }
@@ -132,16 +150,23 @@ func (f *Feature) ListFeatureChanges() ([]string, error) {
 		return nil, err
 	}
 
+	logging.Instance().Debugf("got change blob from git logs containing: %s", changeBlob)
+	logging.Instance().Debug("creating formatted change log entries for feature")
+
 	scanner := bufio.NewScanner(strings.NewReader(string(changeBlob)))
 	for scanner.Scan() {
 		changes = append(changes, fmt.Sprintf("- %s", scanner.Text()))
 	}
+
+	logging.Instance().Debugf("feature changes captured: %v", changes)
 
 	return changes, nil
 }
 
 func (f *Feature) CommitChanges(commitMessage string) (string, error) {
 	formattedMessage := fmt.Sprintf("%s %s", f.Jira, commitMessage)
+
+	logging.Instance().Debugf("committing changes with message: %s", formattedMessage)
 
 	return git.Commit(formattedMessage)
 }
@@ -155,6 +180,8 @@ func (f *Feature) Save() error {
 		}
 	}
 
+	logging.Instance().Debugf("saving feature changes to file at: %s", GOGDir + "/feature.json")
+
 	featureFile, err := os.Create(GOGDir + "/feature.json")
 	if err != nil {
 		return err
@@ -165,17 +192,23 @@ func (f *Feature) Save() error {
 	if err != nil {
 		return err
 	}
+
+	logging.Instance().Debugf("serialized feature into %d bytes", len(featureBytes))
 	
 	_, err = featureFile.Write(featureBytes)
 	if err != nil {
 		return err
 	}
 
+	logging.Instance().Debug("successfully wrote feature changes to file")
+
 	return nil
 }
 
 func (f *Feature) Clean() error {
 	GOGDir := common.GOGPath()
+
+	logging.Instance().Debug("cleaning feature files")
 
 	if _, err := git.CheckoutDefaultBranch(); err != nil {
 		return err
@@ -185,9 +218,17 @@ func (f *Feature) Clean() error {
 		return err
 	}
 
+	logging.Instance().Debugf("deleted feature branch: %s", f.Jira)
+
 	if err := os.RemoveAll(GOGDir); err != nil {
 		return err
 	}
 
+	logging.Instance().Debug("removed all GOG feature files from project")
+
 	return nil
+}
+
+func (f *Feature) String() string {
+	return fmt.Sprintf("%s %s", f.Jira, f.Comment)
 }

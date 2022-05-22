@@ -3,6 +3,7 @@ package logging
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -19,6 +20,16 @@ var (
 	instance Logging
 )
 var SeverityLevels = []string{"INFO", "DEBUG", "WARN", "ERROR"}
+
+func fnCallerName() string {
+	pc, _, _, ok := runtime.Caller(2)
+	details := runtime.FuncForPC(pc)
+	if ok && details != nil {
+		return strings.Replace(details.Name(), "sykesdev.ca/gog/", "", 1)
+	}
+
+	return "UNKOWN"
+}
 
 func Instance() *Logging {
 	once.Do(func() {
@@ -91,72 +102,78 @@ func (l Logging) Warnf(fmtMessage string, arguments ...interface{}) {
 
 func (l Logging) Debug(message string) {
 	if l.Level == "DEBUG" {
-		fmt.Printf("%v-%v-%v %v:%v:%v [DEBUG] - %v\n",
+		fmt.Printf("%v-%v-%v %v:%v:%v [%s] [DEBUG] - %v\n",
 		time.Now().Year(),
 		int(time.Now().Month()),
 		time.Now().Day(),
 		time.Now().Hour(),
 		time.Now().Minute(),
 		time.Now().Second(),
+		fnCallerName(),
 		message)
 	}
 }
 
 func (l Logging) Debugf(fmtMessage string, arguments ...interface{}) {
 	if l.Level == "DEBUG" {
-		fmt.Printf("%v-%v-%v %v:%v:%v [DEBUG] - %v\n",
+		fmt.Printf("%v-%v-%v %v:%v:%v [%s] [DEBUG] - %v\n",
 		time.Now().Year(),
 		int(time.Now().Month()),
 		time.Now().Day(),
 		time.Now().Hour(),
 		time.Now().Minute(),
 		time.Now().Second(),
+		fnCallerName(),
 		fmt.Sprintf(fmtMessage, arguments...))
 	}
 }
 
 func (l Logging) Error(message string) {
-	fmt.Printf("%v-%v-%v %v:%v:%v [ERROR] - %v\n",
+	fmt.Printf("%v-%v-%v %v:%v:%v [%s] [ERROR] - %v\n",
 		time.Now().Year(),
 		int(time.Now().Month()),
 		time.Now().Day(),
 		time.Now().Hour(),
 		time.Now().Minute(),
 		time.Now().Second(),
+		fnCallerName(),
 		message)
 }
 
 func (l Logging) Errorf(fmtMessage string, arguments ...interface{}) {
-	fmt.Printf("%v-%v-%v %v:%v:%v [ERROR] - %v\n",
+	fmt.Printf("%v-%v-%v %v:%v:%v [%s] [ERROR] - %v\n",
 		time.Now().Year(),
 		int(time.Now().Month()),
 		time.Now().Day(),
 		time.Now().Hour(),
 		time.Now().Minute(),
 		time.Now().Second(),
+		fnCallerName(),
 		fmt.Sprintf(fmtMessage, arguments...))
 }
 
 func (l Logging) Fatal(message string) {
-	fmt.Printf("%v-%v-%v %v:%v:%v [FATAL] - %v\n",
+	fmt.Printf("%v-%v-%v %v:%v:%v [%s] [FATAL] - %v\n",
 		time.Now().Year(),
 		int(time.Now().Month()),
 		time.Now().Day(),
 		time.Now().Hour(),
 		time.Now().Minute(),
 		time.Now().Second(),
+		fnCallerName(),
 		message)
 	os.Exit(1)
 }
 
 func (l Logging) Fatalf(fmtMessage string, arguments ...interface{}) {
-	fmt.Printf("%v-%v-%v %v:%v:%v [FATAL] - %v\n",
+	fmt.Printf("%v-%v-%v %v:%v:%v [%s] [FATAL] - %v\n",
 		time.Now().Year(),
 		int(time.Now().Month()),
 		time.Now().Day(),
 		time.Now().Hour(),
 		time.Now().Minute(),
 		time.Now().Second(),
+		fnCallerName(),
 		fmt.Sprintf(fmtMessage, arguments...))
 	os.Exit(1)
 }

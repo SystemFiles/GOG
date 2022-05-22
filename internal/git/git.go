@@ -11,12 +11,15 @@ import (
 	"sykesdev.ca/gog/config"
 	"sykesdev.ca/gog/internal/common"
 	"sykesdev.ca/gog/internal/common/constants"
+	"sykesdev.ca/gog/internal/logging"
 	"sykesdev.ca/gog/internal/semver"
 )
 
 func HasUncommittedChanges() bool {
 	cmd := exec.Command("bash", "-c", "git status --porcelain | egrep '^[A,M,D,R]'")
 	_, err := cmd.Output()
+
+	logging.Instance().Debugf("uncommitted changes: %b", err == nil)
 
 	return err == nil
 }
@@ -25,6 +28,8 @@ func IsValidRepo() bool {
 	cmd := exec.Command("git", "status")
 	_, err := cmd.Output()
 	
+	logging.Instance().Debugf("valid repository: %b", err == nil)
+
 	return err == nil
 }
 
@@ -32,12 +37,16 @@ func LocalBranchExists(branch string) bool {
 	cmd := exec.Command("bash", "-c", fmt.Sprintf("git branch | egrep %s", branch))
 	_, err := cmd.Output()
 
+	logging.Instance().Debugf("local branch exists: %b", err == nil)
+
 	return err == nil
 }
 
 func RemoteBranchExists(branch string) bool {
 	cmd := exec.Command("bash", "-c", "git ls-remote --head origin | egrep " + branch)
 	_, err := cmd.Output()
+
+	logging.Instance().Debugf("remote branch exists: %b", err == nil)
 
 	return err == nil
 }
@@ -77,13 +86,12 @@ func Checkout(branch string, create bool) (string, error) {
 	}
 	checkoutArgs = append(checkoutArgs, branch)
 
+	logging.Instance().Debugf("checking out branch, %s, with create: %b", branch, create)
+
 	cmd := exec.Command("git", append([]string{"checkout"}, checkoutArgs...)...)
 	stdout, err := cmd.CombinedOutput()
-	if err != nil {
-		return common.CleanstdoutMultiline(stdout), err
-	}
 
-	return common.CleanStdoutSingleline(stdout), nil
+	return common.CleanstdoutMultiline(stdout), err
 }
 
 func DeleteBranch(branch string) (string, error) {
@@ -93,10 +101,17 @@ func DeleteBranch(branch string) (string, error) {
 		return common.CleanstdoutMultiline(localStdout), err
 	}
 
+	logging.Instance().Debugf("deleted local branch: %s", branch)
+
 	cmdRemote := exec.Command("git", "push", "origin", "--delete", branch)
 	remoteStdout, err := cmdRemote.CombinedOutput()
+	if err != nil {
+		return common.CleanstdoutMultiline(remoteStdout), err
+	}
 
-	return common.CleanstdoutMultiline(remoteStdout), err
+	logging.Instance().Debugf("deleted remote branch: %s", branch)
+
+	return common.CleanstdoutMultiline(remoteStdout), nil
 }
 
 func CheckoutDefaultBranch() (string, error) {
@@ -105,13 +120,19 @@ func CheckoutDefaultBranch() (string, error) {
 		return defaultBranch, err
 	}
 
+	logging.Instance().Debugf("captured default branch: %s", defaultBranch)
+
 	if stderr, err := Checkout(defaultBranch, false); err != nil {
 		return stderr, err
 	}
 
+	logging.Instance().Debugf("checkout to default branch, %s, successful", defaultBranch)
+
 	if stderr, err := PullChanges(); err != nil {
 		return stderr, err
 	}
+
+	logging.Instance().Debug("pulled most recent changes for default branch")
 
 	return "", nil
 }
@@ -119,6 +140,8 @@ func CheckoutDefaultBranch() (string, error) {
 func StageChanges() (string, error) {
 	cmd := exec.Command("git", "add", "-A")
 	stderr, err := cmd.CombinedOutput()
+
+	logging.Instance().Debug("successfully staged all changes for git repo")
 	
 	return common.CleanstdoutMultiline(stderr), err
 }
@@ -132,6 +155,8 @@ func PushRemote(pushArgs string) (string, error) {
 }
 
 func GetPreviousNCommitMessage(count int) ([]string, error) {
+	logging.Instance().Debug("capturing previous commits from git log")
+
 	cmd := exec.Command("git", "log", "-" + fmt.Sprint(count), "--pretty=%B")
 	stdout, err := cmd.CombinedOutput()
 	if err != nil {
@@ -144,6 +169,8 @@ func GetPreviousNCommitMessage(count int) ([]string, error) {
 			commits = append(commits, m)
 		}
 	}
+
+	logging.Instance().Debugf("captured %d previous commits: %v", len(commits), commits)
 
 	return commits, nil
 }
@@ -194,7 +221,10 @@ func LatestTagName() (string, error) {
 func ProjectExistingVersionPrefix() (string, error) {
 	tagName, err := LatestTagName()
 	if err != nil {
+		logging.Instance().Debugf("error ocurred when reading latest tagName from repo: %v\n%s", err, tagName)
+
 		if strings.Contains(err.Error(), "128") {
+			logging.Instance().Debug("existing tag prefix defaulting to global defaults since no existing tags found on remote")
 			return config.AppConfig().TagPrefix(), nil
 		}
 
@@ -208,6 +238,8 @@ func ProjectExistingVersionPrefix() (string, error) {
 		existingPrefix = ""
 	}
 
+	logging.Instance().Debugf("captured existing prefix for repository: %s", existingPrefix)
+
 	return existingPrefix, nil
 }
 
@@ -219,10 +251,16 @@ func OriginCurrentVersion() (semver.Semver, error) {
 		return version, err
 	}
 
+	logging.Instance().Debugf("default branch at: %s", defaultBranch)
+
 	tagCmd := exec.Command("bash", "-c", fmt.Sprintf("git tag --merged %s", defaultBranch))
 	tagOut, err := tagCmd.CombinedOutput()
 	if err != nil {
+		
+		logging.Instance().Debugf("error ocurred when capturing current tag version from remote (%s): %v", defaultBranch, err)
+
 		if strings.Contains(err.Error(), "128") {
+			logging.Instance().Debug("defaulting to verion 0.0.0 since no existing tags found on remote")
 			return version, nil
 		}
 		
@@ -234,10 +272,15 @@ func OriginCurrentVersion() (semver.Semver, error) {
 		return version, err
 	}
 
-	latestTag := [3]int{0,0,0}
+	logging.Instance().Debug("checking for latest existing tag from remote")
+
+	latestTag := semver.Semver{0,0,0}
 	tagScanner := bufio.NewScanner(bytes.NewReader(tagOut))
 	for tagScanner.Scan() {
 		tag := tagScanner.Text()
+
+		logging.Instance().Debugf("processing: %s", tag)
+
 		if matched := semverRegex.MatchString(tag); matched {
 			semverTag, err := semver.Parse(tag)
 			if err != nil {
@@ -245,10 +288,13 @@ func OriginCurrentVersion() (semver.Semver, error) {
 			}
 
 			if semverTag.GreaterThan(latestTag) {
+				logging.Instance().Debugf("found newer tag version: %s", semverTag)
 				latestTag = semverTag
 			}
 		}
 	}
+
+	logging.Instance().Debugf("latest tag found: %s", latestTag)
 
 	return latestTag, nil
 }
