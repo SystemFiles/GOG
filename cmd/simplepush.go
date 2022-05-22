@@ -22,8 +22,8 @@ type SimplePushCommand struct {
 	message string
 }
 
-func gitLatestTestBuild() int {
-	prev, err := git.GetPreviousNCommitMessage(1)
+func gitLatestTestBuild(r *git.Repository) int {
+	prev, err := r.LogN(1)
 	if err != nil {
 		return -1
 	}
@@ -89,8 +89,9 @@ message
 }
 
 func (c *SimplePushCommand) Run() error {
-	if !git.IsValidRepo() {
-		return fmt.Errorf("the current directory is not a valid git repository")
+	r, err := git.NewRepository()
+	if err != nil {
+		return err
 	}
 
 	GOGDir := common.GOGPath()
@@ -105,45 +106,31 @@ func (c *SimplePushCommand) Run() error {
 		}
 	}
 
-	cbOut, err := git.GetCurrentBranch()
-	if err != nil {
-		return fmt.Errorf("failure to get name for current branch. %v\n%s", err, cbOut)
-	}
-
-	buildNumber := gitLatestTestBuild()
+	buildNumber := gitLatestTestBuild(r)
 
 	if c.message == "" {
-		c.message = fmt.Sprintf("Test Build (%d)", buildNumber + 1)
+		c.message = fmt.Sprintf("%s Test Build (%d)", r.CurrentBranch, buildNumber + 1)
 	}	else {
-		c.message = fmt.Sprintf("%s (%d)", c.message, buildNumber + 1)
+		c.message = fmt.Sprintf("%s %s (%d)", r.CurrentBranch, c.message, buildNumber + 1)
 	}
 
-	if stderr, err := git.StageChanges(); err != nil {
-		return fmt.Errorf("failure to stage local changes. %v\n%s", err, stderr)
+	if err := r.StageChanges(); err != nil {
+		return err
 	}
 
-	var pushArgs string
-	if git.HasUncommittedChanges() {
-		formattedMessage := fmt.Sprintf("%s %s", cbOut, c.message)
-		if stderr, err := git.Commit(formattedMessage); err != nil {
-			return fmt.Errorf("failed to commit local changes. %v\n%s", err, stderr)
-		}
+	if err := r.CommitChanges(c.message); err != nil {
+		return err
+	}
+	
+	if err := r.PullChanges(); err != nil {
+		return err
 	}
 
-	if !git.RemoteBranchExists(cbOut) {
-		pushArgs = fmt.Sprintf("--set-upstream origin %s", cbOut)
-	} else {
-		// only pull changes if a remote exists
-		if stderr, err := git.PullChanges(); err != nil {
-			return fmt.Errorf("failed to pull changes from existing remote branch. %v\n%s", err, stderr)
-		}
+	if err := r.Push(); err != nil {
+		return err
 	}
 
-	if stderr, err := git.PushRemote(pushArgs); err != nil {
-		return fmt.Errorf("failed to push local changes to remote. %v\n%s", err, stderr)
-	}
-
-	logging.Instance().Info("Successfully pushed changes to remote (" + cbOut + ")!")
+	logging.Instance().Info("Successfully pushed changes to remote (" + r.CurrentBranch.Name + ")!")
 	
 	return nil
 }

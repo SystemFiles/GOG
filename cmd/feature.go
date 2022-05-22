@@ -89,8 +89,9 @@ func (fc *FeatureCommand) Run() error {
 		return errors.New("invalid Jira format ... example of a valid format would be 'JIRA-0023'")
 	}
 
-	if !git.IsValidRepo() {
-		return fmt.Errorf("the current directory is not a valid git repository")
+	r, err := git.NewRepository()
+	if err != nil {
+		return err
 	}
 
 	GOGDir := common.GOGPath()
@@ -108,12 +109,8 @@ func (fc *FeatureCommand) Run() error {
 		config.AppConfig().SetTagPrefix(feature.CustomVersionPrefix)
 	}
 
-	existingPrefix, err := git.ProjectExistingVersionPrefix()
-	if err != nil {
-		return fmt.Errorf("failed to get projects existing version prefix. %v", err)
-	}
-	if existingPrefix != config.AppConfig().TagPrefix() {
-		logging.Instance().Warnf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), existingPrefix)
+	if r.VersionPrefix != config.AppConfig().TagPrefix() {
+		logging.Instance().Warnf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), r.VersionPrefix)
 		if c := prompt.String("continue with feature creation (Y/n)? "); strings.ToUpper(c) != "Y" {
 			logging.Instance().Info("safely exiting feature creation")
 			logging.Instance().Info("if you wish to use the existing version prefix, but it is not set in the global config for GOG, you can pass it using the -prefix flag (see -help for details)")
@@ -122,29 +119,29 @@ func (fc *FeatureCommand) Run() error {
 		logging.Instance().Info("continuing with feature creation against warning")
 	}
 
-	if feature.LocalExists() {
+	if r.ContainsBranch(feature.Jira) {
 		return fmt.Errorf("there is already a branch in this repo named %s", feature.Jira)
 	}
 
 	if !fc.FromFeature {
-		if stderr, err := git.CheckoutDefaultBranch(); err != nil {
-			return fmt.Errorf("failed to checkout default branch for repo. %v\n%s", err, stderr)
-		}
+		return errors.New("from-feature not implemented yet")
 	}
 
-	if stderr, err := git.PullChanges(); err != nil {
-		return fmt.Errorf("failed to pull some changes before creating the new feature. %v\n%s", err, stderr)
+	if err := r.CheckoutBranch(r.DefaultBranch, false, false); err != nil {
+		return err
 	}
 
-	if stderr, err := feature.CreateBranch(); err != nil {
-		return fmt.Errorf("failed to create or checkout new feature branch, %s. %v \n%s", feature.Jira, err, stderr)
+	if err := r.PullChanges(); err != nil {
+		return fmt.Errorf("failed to pull some changes before creating the new feature. %v", err)
+	}
+
+	fb := git.NewBranch(feature.Jira)
+
+	if err := r.CheckoutBranch(fb, true, true); err != nil {
+		return fmt.Errorf("failed to create or checkout new feature branch, %s. %v", feature.Jira, err)
 	}
 
 	if err := feature.Save(); err != nil {
-		if err := feature.Clean(); err != nil {
-			return fmt.Errorf(fmt.Sprintf("Failed to exit cleanly ... %v", err))
-		}
-
 		return fmt.Errorf("failed to create feature tracking file (%v)", err)
 	}
 

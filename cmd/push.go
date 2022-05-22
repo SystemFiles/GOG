@@ -59,8 +59,9 @@ func (pc *PushCommand) Init(args []string) error {
 }
 
 func (pc *PushCommand) Run() error {
-	if !git.IsValidRepo() {
-		return fmt.Errorf("the current directory is not a valid git repository")
+	r, err := git.NewRepository()
+	if err != nil {
+		return err
 	}
 
 	GOGDir := common.GOGPath()
@@ -79,9 +80,21 @@ func (pc *PushCommand) Run() error {
 		pc.message = fmt.Sprintf("Test Build (%d)", feature.TestCount)
 		feature.UpdateTestCount()
 	}
+	
+	if err := r.StageChanges(); err != nil {
+		return err
+	}
 
-	if stderr, err := feature.PushChanges(pc.message); err != nil {
-		return fmt.Errorf("failed to push changes to remote repository. %v \n%s", err, stderr)
+	if err := r.CommitChanges(pc.message); err != nil {
+		return err
+	}
+
+	if err := r.PullChanges(); err != nil {
+		return err
+	}
+
+	if err := r.Push(); err != nil {
+		return err
 	}
 
 	logging.Instance().Info("Successfully pushed changes to remote feature!")

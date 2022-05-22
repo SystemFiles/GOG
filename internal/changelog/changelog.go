@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"sykesdev.ca/gog/internal/common"
+	"sykesdev.ca/gog/internal/git"
 	"sykesdev.ca/gog/internal/logging"
 	"sykesdev.ca/gog/internal/models"
 	"sykesdev.ca/gog/internal/semver"
@@ -105,13 +106,14 @@ func WriteChangelogToFile(lines []string) error {
 }
 
 type ChangelogEntry struct {
+	Repository *git.Repository
 	Feature *models.Feature
 	Version semver.Semver
 	Added bool
 }
 
-func NewChangelogEntry(feature *models.Feature, version semver.Semver, added bool) (*ChangelogEntry) {
-	return &ChangelogEntry{ Feature: feature, Version: version, Added: added }
+func NewChangelogEntry(feature *models.Feature, repo *git.Repository, version semver.Semver, added bool) (*ChangelogEntry) {
+	return &ChangelogEntry{ Feature: feature, Repository: repo, Version: version, Added: added }
 }
 
 func (e *ChangelogEntry) Lines() []string {
@@ -135,7 +137,7 @@ func (e *ChangelogEntry) Lines() []string {
 		lines = append(lines, "\n### Changed\n")
 	}
 
-	changes, err := e.Feature.ListFeatureChanges()
+	changes, err := e.Feature.Changes(e.Repository)
 	if err != nil {
 		logging.Instance().Fatalf("failed to get feature changes from git. try pushing a change first. %v", err)
 	}

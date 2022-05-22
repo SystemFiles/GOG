@@ -92,8 +92,9 @@ func (fc *FinishCommand) Init(args []string) error {
 }
 
 func (fc *FinishCommand) Run() error {
-	if !git.IsValidRepo() {
-		return fmt.Errorf("the current directory is not a valid git repository")
+	r, err := git.NewRepository()
+	if err != nil {
+		return err
 	}
 
 	GOGDir := common.GOGPath()
@@ -111,12 +112,8 @@ func (fc *FinishCommand) Run() error {
 		config.AppConfig().SetTagPrefix(feature.CustomVersionPrefix)
 	}
 
-	existingPrefix, err := git.ProjectExistingVersionPrefix()
-	if err != nil {
-		return fmt.Errorf("failed to get projects existing version prefix. %v", err)
-	}
-	if existingPrefix != config.AppConfig().TagPrefix() {
-		logging.Instance().Warnf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), existingPrefix)
+	if r.VersionPrefix != config.AppConfig().TagPrefix() {
+		logging.Instance().Warnf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), r.VersionPrefix)
 		if c := prompt.String("continue with feature release (Y/n)? "); strings.ToUpper(c) != "Y" {
 			logging.Instance().Info("safely exiting feature release")
 			return nil
@@ -124,15 +121,9 @@ func (fc *FinishCommand) Run() error {
 		logging.Instance().Info("continuing with feature release against warning")
 	}
 
-	currentVersion, err := git.OriginCurrentVersion()
-	if err != nil {
-		return fmt.Errorf("failed to get current project version. %v", err)
-	}
-
-	updatedVersion := bumpReleaseVersion(currentVersion, fc.action)
-
-	changelogEntry := changelog.NewChangelogEntry(feature, updatedVersion, fc.action == "MAJOR" || fc.action == "MINOR")
-
+	updatedVersion := bumpReleaseVersion(r.LastTag, fc.action)
+	
+	changelogEntry := changelog.NewChangelogEntry(feature, r, updatedVersion, fc.action == "MAJOR" || fc.action == "MINOR")
 	changelogLines, err := changelog.CreateChangeLogLines(changelogEntry)
 	if err != nil {
 		return fmt.Errorf("failed to update the changelog. %v", err)
@@ -146,33 +137,44 @@ func (fc *FinishCommand) Run() error {
 		return fmt.Errorf("failed to remove GOG directory. %v", err)
 	}
 
-	if stderr, err := feature.PushChanges(feature.Comment); err != nil {
-		return fmt.Errorf("failed to push changes to remote repository. %v \n%s", err, stderr)
+	if err := r.StageChanges(); err != nil {
+		return err
 	}
 
-	stderr, err := git.CheckoutDefaultBranch()
-	if err != nil {
-		return fmt.Errorf("failed to checkout default branch. %v \n%s", err, stderr)
+	if err := r.CommitChanges(feature.Comment); err != nil {
+		return err
 	}
 
-	if stderr, err := feature.Rebase(); err != nil {
-		return fmt.Errorf("failed to rebase commits into new release. %v \n%s", err, stderr)
+	if err := r.PullChanges(); err != nil {
+		return err
 	}
 
-	if stderr, err := feature.CreateReleaseTags(updatedVersion); err != nil {
-		return fmt.Errorf("failed to create release tags. %v \n%s", err, stderr)
+	if err := r.Push(); err != nil {
+		return err
+	}
+	
+	if err := r.Rebase(); err != nil {
+		return fmt.Errorf("failed to rebase commits into new release. %v", err)
 	}
 
-	if stderr, err := git.PushRemote(""); err != nil {
-		return fmt.Errorf("failed to push rebase to remote. %v \n%s", err, stderr)
+	if err := r.CheckoutBranch(r.DefaultBranch, false, false); err != nil {
+		return err
 	}
 
-	if stderr, err := git.PushRemoteTagsOnly(); err != nil {
-		return fmt.Errorf("failed to publish release tags to remote. %v \n%s", err, stderr)
+	if err := feature.CreateReleaseTags(r, r.LastTag); err != nil {
+		return fmt.Errorf("failed to create release tags. %v", err)
 	}
 
-	if stderr, err := feature.DeleteBranch(); err != nil {
-		return fmt.Errorf("failed to delete existing feature branch for %s. %v \n%s", feature.Jira, err, stderr)
+	if err := r.Push(); err != nil {
+		return fmt.Errorf("failed to push rebase to remote. %v", err)
+	}
+
+	if err := r.PushTags(); err != nil {
+		return fmt.Errorf("failed to publish release tags to remote. %v", err)
+	}
+
+	if err := r.FeatureBranch.Delete(); err != nil {
+		return fmt.Errorf("failed to delete existing feature branch for %s. %v", feature.Jira, err)
 	}
 
 	logging.Instance().Infof("Successfully created new feature release for %s!", feature.Jira)

@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"sykesdev.ca/gog/cmd"
-	"sykesdev.ca/gog/config"
 	"sykesdev.ca/gog/internal/common"
+	"sykesdev.ca/gog/internal/git"
 	"sykesdev.ca/gog/internal/logging"
 	"sykesdev.ca/gog/internal/update"
 )
@@ -49,10 +49,16 @@ func root() error {
 }
 
 func main() {
-	logging.Instance().Setup(config.AppConfig().LogLevel())
-
-	if err := root(); err != nil {
-		logging.Instance().Error(err.Error())
-		os.Exit(1)
+	r, err := git.NewRepository()
+	if err != nil {
+		fmt.Println(err)
 	}
+	fmt.Println(r)
+
+	// logging.Instance().Setup(config.AppConfig().LogLevel())
+
+	// if err := root(); err != nil {
+	// 	logging.Instance().Error(err.Error())
+	// 	os.Exit(1)
+	// }
 }
