@@ -113,7 +113,7 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("failed to get projects existing version prefix. %v", err)
 	}
 	if existingPrefix != config.AppConfig().TagPrefix() {
-		logging.Instance().Warn(fmt.Sprintf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), existingPrefix))
+		logging.Instance().Warnf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), existingPrefix)
 		if c := prompt.String("continue with feature creation (Y/n)? "); strings.ToUpper(c) != "Y" {
 			logging.Instance().Info("safely exiting feature creation")
 			logging.Instance().Info("if you wish to use the existing version prefix, but it is not set in the global config for GOG, you can pass it using the -prefix flag (see -help for details)")
@@ -148,7 +148,7 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("failed to create feature tracking file (%v)", err)
 	}
 
-	logging.Instance().Info(fmt.Sprintf("Successfully created feature %s!", feature.Jira))
+	logging.Instance().Infof("Successfully created feature %s!", feature.Jira)
 
 	return nil
 }

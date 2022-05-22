@@ -52,6 +52,17 @@ func (l Logging) Info(message string) {
 		message)
 }
 
+func (l Logging) Infof(fmtMessage string, arguments ...interface{}) {
+	fmt.Printf("%v-%v-%v %v:%v:%v [INFO] - %v\n",
+		time.Now().Year(),
+		int(time.Now().Month()),
+		time.Now().Day(),
+		time.Now().Hour(),
+		time.Now().Minute(),
+		time.Now().Second(),
+		fmt.Sprintf(fmtMessage, arguments...))
+}
+
 func (l Logging) Warn(message string) {
 	if l.Level == "WARN" || l.Level == "DEBUG" || l.Level == "INFO" {
 		fmt.Printf("%v-%v-%v %v:%v:%v [WARN] - %v\n",
@@ -62,6 +73,19 @@ func (l Logging) Warn(message string) {
 		time.Now().Minute(),
 		time.Now().Second(),
 		message)
+	}
+}
+
+func (l Logging) Warnf(fmtMessage string, arguments ...interface{}) {
+	if l.Level == "WARN" || l.Level == "DEBUG" || l.Level == "INFO" {
+		fmt.Printf("%v-%v-%v %v:%v:%v [WARN] - %v\n",
+		time.Now().Year(),
+		int(time.Now().Month()),
+		time.Now().Day(),
+		time.Now().Hour(),
+		time.Now().Minute(),
+		time.Now().Second(),
+		fmt.Sprintf(fmtMessage, arguments...))
 	}
 }
 
@@ -78,6 +102,19 @@ func (l Logging) Debug(message string) {
 	}
 }
 
+func (l Logging) Debugf(fmtMessage string, arguments ...interface{}) {
+	if l.Level == "DEBUG" {
+		fmt.Printf("%v-%v-%v %v:%v:%v [DEBUG] - %v\n",
+		time.Now().Year(),
+		int(time.Now().Month()),
+		time.Now().Day(),
+		time.Now().Hour(),
+		time.Now().Minute(),
+		time.Now().Second(),
+		fmt.Sprintf(fmtMessage, arguments...))
+	}
+}
+
 func (l Logging) Error(message string) {
 	fmt.Printf("%v-%v-%v %v:%v:%v [ERROR] - %v\n",
 		time.Now().Year(),
@@ -89,6 +126,17 @@ func (l Logging) Error(message string) {
 		message)
 }
 
+func (l Logging) Errorf(fmtMessage string, arguments ...interface{}) {
+	fmt.Printf("%v-%v-%v %v:%v:%v [ERROR] - %v\n",
+		time.Now().Year(),
+		int(time.Now().Month()),
+		time.Now().Day(),
+		time.Now().Hour(),
+		time.Now().Minute(),
+		time.Now().Second(),
+		fmt.Sprintf(fmtMessage, arguments...))
+}
+
 func (l Logging) Fatal(message string) {
 	fmt.Printf("%v-%v-%v %v:%v:%v [FATAL] - %v\n",
 		time.Now().Year(),
@@ -98,5 +146,17 @@ func (l Logging) Fatal(message string) {
 		time.Now().Minute(),
 		time.Now().Second(),
 		message)
+	os.Exit(1)
+}
+
+func (l Logging) Fatalf(fmtMessage string, arguments ...interface{}) {
+	fmt.Printf("%v-%v-%v %v:%v:%v [FATAL] - %v\n",
+		time.Now().Year(),
+		int(time.Now().Month()),
+		time.Now().Day(),
+		time.Now().Hour(),
+		time.Now().Minute(),
+		time.Now().Second(),
+		fmt.Sprintf(fmtMessage, arguments...))
 	os.Exit(1)
 }

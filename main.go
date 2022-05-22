@@ -18,7 +18,7 @@ func root() error {
 	}
 
 	if common.StringInSlice(os.Args, "-v") || common.StringInSlice(os.Args, "-version") {
-		logging.Instance().Info(fmt.Sprintf("Current Version of GOG: %s", update.Version))
+		logging.Instance().Infof("Current Version of GOG: %s", update.Version)
 		return nil
 	}
 

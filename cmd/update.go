@@ -56,7 +56,7 @@ func (usc *UpdateSelfCommand) Run() error {
 		return err
 	}
 
-	logging.Instance().Info(fmt.Sprintf("Successfully updated GOG from %s to %s", u.CurrentVersion(), u.UpdateVersion()))
+	logging.Instance().Infof("Successfully updated GOG from %s to %s", u.CurrentVersion(), u.UpdateVersion())
 	return nil
 }
 
