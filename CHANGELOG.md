@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.5.1 ] - 2022-5-22 13:25:17
+
+> BENS-0026 fix update bug introduced in 0.5.0
+
+### Changed
+
+- `768f7ea` - BENS-0026 changed actions workflow to point to correct project version
+
+
+
 ## [ 0.5.0 ] - 2022-5-22 3:15:33
 
 > BENS-0025 Simple-Push Feature
