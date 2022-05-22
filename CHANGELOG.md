@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.5.2 ] - 2022-5-22 13:55:28
+
+> BENS-0027 optimize release workflow
+
+### Changed
+
+- `88fc417` - BENS-0027 split release creation and asset release into separate jobs
+
+
+
 ## [ 0.5.1 ] - 2022-5-22 13:25:17
 
 > BENS-0026 fix update bug introduced in 0.5.0
