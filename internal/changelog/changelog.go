@@ -37,7 +37,7 @@ func CreateChangeLogLines(entry *ChangelogEntry) ([]string, error) {
 	}
 	defer f.Close()
 
-	logging.GetLogger().Debug("Creating changelog entry ...")
+	logging.Instance().Debug("Creating changelog entry ...")
 
 	var changelogLines []string
 	scanner := bufio.NewScanner(bufio.NewReader(f))
@@ -115,9 +115,9 @@ func (e *ChangelogEntry) Lines() []string {
 		lines = append(lines, "\n### Changed\n")
 	}
 
-	changes, err := e.Feature.ListChanges()
+	changes, err := e.Feature.ListFeatureChanges()
 	if err != nil {
-		logging.GetLogger().Fatal(fmt.Sprintf("failed to get feature changes from git. try pushing a change first. %v", err))
+		logging.Instance().Fatal(fmt.Sprintf("failed to get feature changes from git. try pushing a change first. %v", err))
 	}
 
 	lines = append(lines, changes...)

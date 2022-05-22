@@ -17,7 +17,7 @@ import (
 )
 
 func FeatureUsage() {
-	logging.GetLogger().Info("Usage: gog feature <jira_name> <comment> [-from-feature]")
+	logging.Instance().Info("Usage: gog feature <jira_name> <comment> [-from-feature]")
 }
 
 type FeatureCommand struct {
@@ -113,16 +113,16 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("failed to get projects existing version prefix. %v", err)
 	}
 	if existingPrefix != config.AppConfig().TagPrefix() {
-		logging.GetLogger().Warn(fmt.Sprintf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), existingPrefix))
+		logging.Instance().Warn(fmt.Sprintf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), existingPrefix))
 		if c := prompt.String("continue with feature creation (Y/n)? "); strings.ToUpper(c) != "Y" {
-			logging.GetLogger().Info("safely exiting feature creation")
-			logging.GetLogger().Info("if you wish to use the existing version prefix, but it is not set in the global config for GOG, you can pass it using the -prefix flag (see -help for details)")
+			logging.Instance().Info("safely exiting feature creation")
+			logging.Instance().Info("if you wish to use the existing version prefix, but it is not set in the global config for GOG, you can pass it using the -prefix flag (see -help for details)")
 			return nil
 		}
-		logging.GetLogger().Info("continuing with feature creation against warning")
+		logging.Instance().Info("continuing with feature creation against warning")
 	}
 
-	if feature.BranchExists() {
+	if feature.LocalExists() {
 		return fmt.Errorf("there is already a branch in this repo named %s", feature.Jira)
 	}
 
@@ -148,7 +148,7 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("failed to create feature tracking file (%v)", err)
 	}
 
-	logging.GetLogger().Info(fmt.Sprintf("Successfully created feature %s!", feature.Jira))
+	logging.Instance().Info(fmt.Sprintf("Successfully created feature %s!", feature.Jira))
 
 	return nil
 }

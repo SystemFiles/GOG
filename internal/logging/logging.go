@@ -20,7 +20,7 @@ var (
 )
 var SeverityLevels = []string{"INFO", "DEBUG", "WARN", "ERROR"}
 
-func GetLogger() *Logging {
+func Instance() *Logging {
 	once.Do(func() {
 		var lvl string
 		if common.StringInSlice(SeverityLevels, os.Getenv("GOG_LOG_LEVEL")) {
@@ -35,7 +35,7 @@ func GetLogger() *Logging {
 	return &instance
 }
 
-func (l *Logging) SetupLogger(level string) {
+func (l *Logging) Setup(level string) {
 	if common.StringInSlice(SeverityLevels, strings.ToUpper(level)) {
 		l.Level = strings.ToUpper(level)
 	}

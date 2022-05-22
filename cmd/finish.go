@@ -116,12 +116,12 @@ func (fc *FinishCommand) Run() error {
 		return fmt.Errorf("failed to get projects existing version prefix. %v", err)
 	}
 	if existingPrefix != config.AppConfig().TagPrefix() {
-		logging.GetLogger().Warn(fmt.Sprintf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), existingPrefix))
+		logging.Instance().Warn(fmt.Sprintf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), existingPrefix))
 		if c := prompt.String("continue with feature release (Y/n)? "); strings.ToUpper(c) != "Y" {
-			logging.GetLogger().Info("safely exiting feature release")
+			logging.Instance().Info("safely exiting feature release")
 			return nil
 		}
-		logging.GetLogger().Info("continuing with feature release against warning")
+		logging.Instance().Info("continuing with feature release against warning")
 	}
 
 	currentVersion, err := git.OriginCurrentVersion()
@@ -175,7 +175,7 @@ func (fc *FinishCommand) Run() error {
 		return fmt.Errorf("failed to delete existing feature branch for %s. %v \n%s", feature.Jira, err, stderr)
 	}
 
-	logging.GetLogger().Info(fmt.Sprintf("Successfully created new feature release for %s!", feature.Jira))
+	logging.Instance().Info(fmt.Sprintf("Successfully created new feature release for %s!", feature.Jira))
 
 	return nil
 }

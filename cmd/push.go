@@ -84,7 +84,7 @@ func (pc *PushCommand) Run() error {
 		return fmt.Errorf("failed to push changes to remote repository. %v \n%s", err, stderr)
 	}
 
-	logging.GetLogger().Info("Successfully pushed changes to remote feature!")
+	logging.Instance().Info("Successfully pushed changes to remote feature!")
 
 	return nil
 }

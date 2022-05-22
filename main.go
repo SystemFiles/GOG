@@ -18,7 +18,7 @@ func root() error {
 	}
 
 	if common.StringInSlice(os.Args, "-v") || common.StringInSlice(os.Args, "-version") {
-		logging.GetLogger().Info(fmt.Sprintf("Current Version of GOG: %s", update.Version))
+		logging.Instance().Info(fmt.Sprintf("Current Version of GOG: %s", update.Version))
 		return nil
 	}
 
@@ -49,10 +49,10 @@ func root() error {
 }
 
 func main() {
-	logging.GetLogger().SetupLogger(config.AppConfig().LogLevel())
+	logging.Instance().Setup(config.AppConfig().LogLevel())
 
 	if err := root(); err != nil {
-		logging.GetLogger().Error(err.Error())
+		logging.Instance().Error(err.Error())
 		os.Exit(1)
 	}
 }

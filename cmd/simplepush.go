@@ -8,8 +8,10 @@ import (
 	"strconv"
 	"strings"
 
+	"sykesdev.ca/gog/internal/common"
 	"sykesdev.ca/gog/internal/git"
 	"sykesdev.ca/gog/internal/logging"
+	"sykesdev.ca/gog/internal/prompt"
 )
 
 type SimplePushCommand struct {
@@ -21,7 +23,7 @@ type SimplePushCommand struct {
 }
 
 func gitLatestTestBuild() int {
-	prev, err := git.GetPreviousCommitMessage(1)
+	prev, err := git.GetPreviousNCommitMessage(1)
 	if err != nil {
 		return -1
 	}
@@ -71,15 +73,15 @@ func (c *SimplePushCommand) Init(args []string) error {
 
 func (c *SimplePushCommand) Help() {
 	fmt.Printf(
-	`Usage: %s %s [message] [-h] [-help]
-	
-	Simple-Push is a utility to allow non-feature related code pushes directly to the current remote branch. If used without a message one will be generated.
+`Usage: %s %s [message] [-h] [-help]
 
-	-------====== Simple-Push Arguments ======-------
-	
-	message
-		(optionally) specifies a commit message for this simple push operation
-	`, os.Args[0], c.name)
+Simple-Push is a utility to allow non-feature related code pushes directly to the current remote branch. If used without a message one will be generated.
+
+-------====== Simple-Push Arguments ======-------
+
+message
+	(optionally) specifies a commit message for this simple push operation
+`, os.Args[0], c.name)
 	
 	c.fs.PrintDefaults()
 
@@ -89,6 +91,18 @@ func (c *SimplePushCommand) Help() {
 func (c *SimplePushCommand) Run() error {
 	if !git.IsValidRepo() {
 		return fmt.Errorf("the current directory is not a valid git repository")
+	}
+
+	GOGDir := common.GOGPath()
+
+	if common.PathExists(GOGDir + "/feature.json") {
+		logging.Instance().Warn("this project seems to already have an associated GOG feature file. It is recommended to use 'gog (p | push)' for feature code changes")
+		contResp := prompt.String("would you like to continue? [Y/N] ")
+
+		if strings.ToUpper(contResp) != "Y" {
+			logging.Instance().Info("cancelling simple-push ...")
+			return nil
+		}
 	}
 
 	cbOut, err := git.GetCurrentBranch()
@@ -114,14 +128,14 @@ func (c *SimplePushCommand) Run() error {
 		if stderr, err := git.Commit(formattedMessage); err != nil {
 			return fmt.Errorf("failed to commit local changes. %v\n%s", err, stderr)
 		}
+	}
 
-		if !git.BranchExists(cbOut) {
-			pushArgs = fmt.Sprintf("--set-upstream origin %s", cbOut)
-		} else {
-			// only pull changes if a remote exists
-			if stderr, err := git.PullChanges(); err != nil {
-				return fmt.Errorf("failed to pull changes from existing remote branch. %v\n%s", err, stderr)
-			}
+	if !git.RemoteBranchExists(cbOut) {
+		pushArgs = fmt.Sprintf("--set-upstream origin %s", cbOut)
+	} else {
+		// only pull changes if a remote exists
+		if stderr, err := git.PullChanges(); err != nil {
+			return fmt.Errorf("failed to pull changes from existing remote branch. %v\n%s", err, stderr)
 		}
 	}
 
@@ -129,7 +143,7 @@ func (c *SimplePushCommand) Run() error {
 		return fmt.Errorf("failed to push local changes to remote. %v\n%s", err, stderr)
 	}
 
-	logging.GetLogger().Info("Successfully pushed changes to remote (" + cbOut + ")!")
+	logging.Instance().Info("Successfully pushed changes to remote (" + cbOut + ")!")
 	
 	return nil
 }

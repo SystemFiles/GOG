@@ -45,7 +45,7 @@ func (usc *UpdateSelfCommand) Init(args []string) error {
 }
 
 func (usc *UpdateSelfCommand) Run() error {
-	logging.GetLogger().Info("Performing in-place upgrade for GOG ...")
+	logging.Instance().Info("Performing in-place upgrade for GOG ...")
 
 	u, err := update.NewUpdater(usc.tag)
 	if err != nil {
@@ -56,7 +56,7 @@ func (usc *UpdateSelfCommand) Run() error {
 		return err
 	}
 
-	logging.GetLogger().Info(fmt.Sprintf("Successfully updated GOG from %s to %s", u.CurrentVersion(), u.UpdateVersion()))
+	logging.Instance().Info(fmt.Sprintf("Successfully updated GOG from %s to %s", u.CurrentVersion(), u.UpdateVersion()))
 	return nil
 }
 

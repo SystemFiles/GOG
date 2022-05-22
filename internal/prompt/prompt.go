@@ -5,22 +5,23 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
+
+	"sykesdev.ca/gog/internal/common"
 )
 
 func String(msg string) string {
-	var s string
+	var b []byte
 	r := bufio.NewReader(os.Stdin)
 
 	for {
 		fmt.Fprintf(os.Stderr, "%s ", msg)
-		s, _ = r.ReadString('\n')
-		if s != "" {
+		b, _ = r.ReadBytes('\n')
+		if len(b) > 0 {
 			break
 		}
 	}
 
-	return strings.TrimSpace(s)
+	return common.CleanStdoutSingleline(b)
 }
 
 func Int(msg string) (int, error) {

@@ -3,7 +3,6 @@ package common
 import (
 	"os"
 	"os/exec"
-	"strings"
 )
 
 func GitProjectRoot() (string, error) {
@@ -13,7 +12,7 @@ func GitProjectRoot() (string, error) {
 		return "", err
 	}
 
-	return strings.TrimSpace(strings.ReplaceAll(string(stdout), "\n", "")), nil
+	return CleanStdoutSingleline(stdout), nil
 }
 
 func StringInSlice(slice []string, value string) (bool) {

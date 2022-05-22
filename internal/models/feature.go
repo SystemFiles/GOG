@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 
@@ -63,15 +62,8 @@ func (f *Feature) UpdateTestCount() error {
 	return nil
 }
 
-func (f *Feature) BranchExists() bool {
-	return git.BranchExists(f.Jira)
-}
-
 func (f *Feature) CreateBranch() (string, error) {
-	cmd := exec.Command("git", "checkout", "-b", f.Jira)
-	stdout, err := cmd.CombinedOutput()
-
-	return string(stdout), err
+	return git.Checkout(f.Jira, true)
 }
 
 func (f *Feature) DeleteBranch() (string, error) {
@@ -81,24 +73,15 @@ func (f *Feature) DeleteBranch() (string, error) {
 		return cbStdout, err
 	}
 
-	cmdLocal := exec.Command("git", "branch", "-D", f.Jira)
-	localStdout, err := cmdLocal.CombinedOutput()
-	if err != nil {
-		return string(localStdout), err
-	}
+	return git.DeleteBranch(f.Jira)
+}
 
-	cmdRemote := exec.Command("git", "push", "origin", "--delete", f.Jira)
-	remoteStdout, err := cmdRemote.CombinedOutput()
-	
-	return string(remoteStdout), err
+func (f *Feature) LocalExists() bool {
+	return git.LocalBranchExists(f.Jira)
 }
 
 func (f *Feature) RemoteExists() bool {
-	remoteExistsCommand := fmt.Sprintf("git ls-remote --heads --exit-code | egrep %s", f.Jira)
-	cmd := exec.Command("bash", "-c", remoteExistsCommand)
-	_, err := cmd.Output()
-
-	return err == nil
+	return git.RemoteBranchExists(f.Jira)
 }
 
 func (f *Feature) PushChanges(commitMessage string) (string, error) {
@@ -126,37 +109,30 @@ func (f *Feature) PushChanges(commitMessage string) (string, error) {
 }
 
 func (f *Feature) CreateReleaseTags(version semver.Semver) (string, error) {
-	tagCmd := exec.Command("git", "tag", "-a", version.String(), "-m", fmt.Sprintf("(%s): %s %s", version, f.Jira, f.Comment))
-	stdout, err := tagCmd.CombinedOutput()
+	tagMessage := fmt.Sprintf("(%s): %s %s", version, f.Jira, f.Comment)
+	tagStdout, err := git.CreateTag(version.String(), tagMessage, false)
 	if err != nil {
-		return string(stdout), err
+		return tagStdout, err
 	}
 
-	majorTagCmd := exec.Command("git", "tag", "-a", version.Major(), "--force", "-m", fmt.Sprintf("(%s): %s %s", version.Major(), f.Jira, f.Comment))
-	stdout, err = majorTagCmd.CombinedOutput()
+	tagMessage = fmt.Sprintf("(%s): %s %s", version.Major(), f.Jira, f.Comment)
+	tagStdout, err = git.CreateTag(version.Major(), tagMessage, true)
 	
-	return string(stdout), err
+	return tagStdout, err
 }
 
 func (f *Feature) Rebase() (string, error) {
-	cmd := exec.Command("git", "rebase", f.Jira)
-	stdout, err := cmd.CombinedOutput()
-	if err != nil {
-		return string(stdout), err
-	}
-
-	return string(stdout), nil
+	return git.Rebase(f.Jira)
 }
 
-func (f *Feature) ListChanges() ([]string, error) {
+func (f *Feature) ListFeatureChanges() ([]string, error) {
 	var changes []string
-	cmd := exec.Command("bash", "-c", fmt.Sprintf("git log --pretty=oneline --first-parent --format='`%%h` - %%s' | grep '%s'", f.Jira))
-	stdout, err := cmd.CombinedOutput()
+	changeBlob, err := git.LogFor(f.Jira)
 	if err != nil {
 		return nil, err
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(string(stdout)))
+	scanner := bufio.NewScanner(strings.NewReader(string(changeBlob)))
 	for scanner.Scan() {
 		changes = append(changes, fmt.Sprintf("- %s", scanner.Text()))
 	}
