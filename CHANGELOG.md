@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.5.0 ] - 2022-5-22 3:15:33
+
+> BENS-0025 Simple-Push Feature
+
+### Added
+
+- `d450559` - BENS-0025 logging overhauled to be far more useful
+- `cceb092` - BENS-0025 changelog debugging added properly
+- `00e681c` - BENS-0025 refactored git interface and fixups to simple-push
+- `27ce510` - BENS-0025 implemented base command for simple-push feature
+
+
+
 ## [ 0.4.2 ] - 2022-5-15 21:47:26
 
 > BENS-0024 Fixup Related to BENS-0023
