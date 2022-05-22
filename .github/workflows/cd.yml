@@ -38,5 +38,5 @@ jobs:
         goarch: ${{ matrix.goarch }}
         asset_name: GOG-${{ steps.get_version.outputs.VERSION }}-${{ matrix.goos }}-${{ matrix.goarch }}
         binary_name: gog
-        ldflags: "-X 'sykesdev.ca/gog/update.Version=${{ steps.get_version.outputs.VERSION }}'"
+        ldflags: "-X 'sykesdev.ca/gog/internal/update.Version=${{ steps.get_version.outputs.VERSION }}'"
         extra_files: LICENSE README.md CHANGELOG.md
