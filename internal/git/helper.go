@@ -28,7 +28,7 @@ func localBranchExists(branch *Branch) bool {
 	cmd := exec.Command("bash", "-c", fmt.Sprintf("git branch | egrep %s", branch.Name))
 	_, err := cmd.Output()
 
-	logging.Instance().Debugf("local branch exists: %b", err == nil)
+	logging.Instance().Debugf("local branch exists: %t", err == nil)
 
 	return err == nil
 }
@@ -37,7 +37,7 @@ func remoteBranchExists(branch *Branch) bool {
 	cmd := exec.Command("bash", "-c", "git ls-remote --head origin | egrep " + branch.Name)
 	_, err := cmd.Output()
 
-	logging.Instance().Debugf("remote branch exists: %b", err == nil)
+	logging.Instance().Debugf("remote branch exists: %t", err == nil)
 
 	return err == nil
 }
@@ -57,7 +57,7 @@ func originDefaultBranch() (string, error) {
 }
 
 func projectExistingVersionPrefix() (string, error) {
-	tagName, err := originCurrentVersion()
+	tagName, err := originLatestTagName()
 	if err != nil {
 		logging.Instance().Debugf("error ocurred when reading latest tagName from repo: %v\n%s", err, tagName)
 
@@ -69,8 +69,10 @@ func projectExistingVersionPrefix() (string, error) {
 		return "", fmt.Errorf("could not tag information from remote origin. %v", err)
 	}
 
+	logging.Instance().Debugf("origin current/latest tagName: %s", tagName)
+
 	var existingPrefix string
-	if prefixSearch := regexp.MustCompile(constants.VersionPrefixRegexp).FindStringSubmatch(tagName.String()); len(prefixSearch) > 0 {
+	if prefixSearch := regexp.MustCompile(constants.VersionPrefixRegexp).FindStringSubmatch(tagName); len(prefixSearch) > 0 {
 		existingPrefix = strings.TrimSpace(prefixSearch[0])
 	} else {
 		existingPrefix = ""
@@ -81,7 +83,7 @@ func projectExistingVersionPrefix() (string, error) {
 	return existingPrefix, nil
 }
 
-func originCurrentVersion() (semver.Semver, error) {
+func originLatestFullVersion() (semver.Semver, error) {
 	version := semver.Semver{0,0,0}
 
 	defaultBranch, err := originDefaultBranch()
@@ -135,4 +137,31 @@ func originCurrentVersion() (semver.Semver, error) {
 	logging.Instance().Debugf("latest tag found: %s", latestTag)
 
 	return latestTag, nil
+}
+
+func deleteBranch(branch *Branch) error {
+	cmdLocal := exec.Command("git", "branch", "-D", branch.Name)
+	localStdout, err := cmdLocal.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(localStdout))
+	}
+
+	logging.Instance().Debugf("deleted local branch: %s", branch.Name)
+
+	cmdRemote := exec.Command("git", "push", "origin", "--delete", branch.Name)
+	remoteStdout, err := cmdRemote.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(remoteStdout))
+	}
+
+	logging.Instance().Debugf("deleted remote branch: %s", branch.Name)
+
+	return nil
+}
+
+func originLatestTagName() (string, error) {
+	cmd := exec.Command("git", "describe", "--tags", "--abbrev=0")
+	stdout, err := cmd.CombinedOutput()
+
+	return common.CleanstdoutMultiline(stdout), err
 }

@@ -93,14 +93,14 @@ func WriteChangelogToFile(lines []string) error {
 	}
 	defer changelogFile.Close()
 	
-	logging.Instance().Debugf("writing %d lines to CHANGELOG.md", len(lines))
+	logging.Instance().Debugf("writing %d lines to %s/CHANGELOG.md", len(lines), projectRoot)
 
 	_, err = changelogFile.Write([]byte(strings.Join(lines, "\n")))
 	if err != nil {
 		return err
 	}
 
-	logging.Instance().Debug("completed write to CHANGELOG.md")
+	logging.Instance().Debugf("completed write to %s/CHANGELOG.md", projectRoot)
 
 	return nil
 }
@@ -113,6 +113,7 @@ type ChangelogEntry struct {
 }
 
 func NewChangelogEntry(feature *models.Feature, repo *git.Repository, version semver.Semver, added bool) (*ChangelogEntry) {
+	logging.Instance().Debugf("created new changelog entry with value: (%s, %s, %s, %t)", feature, repo, version, added)
 	return &ChangelogEntry{ Feature: feature, Repository: repo, Version: version, Added: added }
 }
 
@@ -146,6 +147,8 @@ func (e *ChangelogEntry) Lines() []string {
 
 	lines = append(lines, changes...)
 	lines = append(lines, "\n\n")
+
+	logging.Instance().Debugf("changelog entry has %d lines", len(lines))
 
 	return lines
 }

@@ -28,11 +28,11 @@ func NewRepository() (*Repository, error) {
 	var wg sync.WaitGroup
 	r := &Repository{mutex: sync.Mutex{}, FeatureBranch: &Branch{}}
 
-	rootChan := make(chan []string, 1)
-	prefixChan, dBranchChan, cBranchChan := make(chan string, 1), make(chan string, 1), make(chan string, 1)
-	lastTagChan := make(chan semver.Semver, 1)
-	doneChan := make(chan struct{}, 1)
-	errChan := make(chan error, 1)
+	rootChan := make(chan []string)
+	prefixChan, dBranchChan, cBranchChan := make(chan string), make(chan string), make(chan string)
+	lastTagChan := make(chan semver.Semver)
+	doneChan := make(chan struct{})
+	errChan := make(chan error)
 
 	if !repositoryIsValid() {
 		return nil, errors.New("directory does not contain a valid git repository")
@@ -95,7 +95,7 @@ func NewRepository() (*Repository, error) {
 
 	wg.Add(1)
 	go func() {
-		latestTag, err := originCurrentVersion()
+		latestTag, err := originLatestFullVersion()
 		if err != nil {
 			errChan <- err
 		}
@@ -128,6 +128,12 @@ func NewRepository() (*Repository, error) {
 				logging.Instance().Debugf("error ocurred when capturing repository metadata. %v", e)
 				return nil, e
 			case <- doneChan:
+				logging.Instance().Debugf("initialized repository with values %v", r)
+
+				if r.DefaultBranch == nil || r.CurrentBranch == nil || r.Name == "" {
+					return nil, errors.New("failed to initialize GOG repository")
+				}
+
 				return r, nil
 		}
 	}
@@ -145,7 +151,7 @@ func (r *Repository) CheckoutBranch(branch *Branch, create, isFeature bool) erro
 	}
 	checkoutArgs = append(checkoutArgs, branch.Name)
 
-	logging.Instance().Debugf("checking out branch, %s, with create: %b", branch, create)
+	logging.Instance().Debugf("checking out branch, %s, with create: %t", branch, create)
 
 	cmd := exec.Command("git", append([]string{"checkout"}, checkoutArgs...)...)
 	stdout, err := cmd.CombinedOutput()
@@ -154,11 +160,15 @@ func (r *Repository) CheckoutBranch(branch *Branch, create, isFeature bool) erro
 	}
 
 	r.CurrentBranch.UpdateBranch(branch.Name)
-	if isFeature {
+	if create && isFeature {
 		r.FeatureBranch = NewBranch(branch.Name)
 	}
 
 	return nil
+}
+
+func (r *Repository) DeleteFeatureBranch() error {
+	return deleteBranch(r.FeatureBranch)
 }
 
 func (r *Repository) StageChanges() error {
@@ -175,6 +185,7 @@ func (r *Repository) StageChanges() error {
 
 func (r *Repository) CommitChanges(message string) error {
 	if r.CurrentBranch.UncommittedChanges() {
+		logging.Instance().Debugf("uncommitted changes found... committing them with message: %s", message)
 		cmd := exec.Command("git", "commit", "-m", message)
 		stderr, err := cmd.CombinedOutput()
 		if err != nil {
@@ -192,12 +203,16 @@ func (r *Repository) PullChanges() error {
 		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(stdout))
 	}
 
-	cmd = exec.Command("git", "pull", "--ff-only")
+	logging.Instance().Debugf("fetched tags from remote with output: %s", string(stdout))
+
+	cmd = exec.Command("git", "pull", "--all")
 	stdout, err = cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(stdout))
 	}
 	
+	logging.Instance().Debugf("pulled changes from remote with output: %s", string(stdout))
+
 	return nil
 }
 
@@ -230,7 +245,17 @@ func (r *Repository) PushTags() error {
 }
 
 func (r *Repository) Rebase() error {
-	cmd := exec.Command("git", "rebase", r.DefaultBranch.Name, r.CurrentBranch.Name)
+	cmd := exec.Command("git", "rebase", r.DefaultBranch.Name)
+	stdout, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(stdout))
+	}
+
+	return nil
+}
+
+func (r *Repository) SquashMerge() error {
+	cmd := exec.Command("git", "merge", "--squash", r.FeatureBranch.Name)
 	stdout, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(stdout))
@@ -261,7 +286,7 @@ func (r *Repository) LogN(N int) ([]string, error) {
 }
 
 func (r *Repository) CreateTag(name, message string, force bool) error {
-	if r.CurrentBranch != r.DefaultBranch {
+	if r.CurrentBranch.Name != r.DefaultBranch.Name {
 		logging.Instance().Warnf("creating tag based on a non-default branch. it is recommended to only create tags from a base branch. current branch: %s", r.CurrentBranch.Name)
 	}
 
@@ -281,7 +306,7 @@ func (r *Repository) CreateTag(name, message string, force bool) error {
 }
 
 func (r *Repository) String() string {
-	return fmt.Sprintf("Repository: { Name: %s, VersionPrefix: %s, Default Branch: %s, Current Branch: %s, Last Tag: %s }",
+	return fmt.Sprintf("Repository: { Name: %s, VersionPrefix: '%s', Default Branch: '%s', Current Branch: '%s', Last Tag: %s }",
 		r.Name,
 		r.VersionPrefix,
 		r.DefaultBranch,

@@ -47,26 +47,6 @@ func (b *Branch) RelatedLogs() (string, error) {
 	return common.CleanstdoutMultiline(stdout), err
 }
 
-func (b *Branch) Delete() (error) {
-	cmdLocal := exec.Command("git", "branch", "-D", b.Name)
-	localStdout, err := cmdLocal.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(localStdout))
-	}
-
-	logging.Instance().Debugf("deleted local branch: %s", b.Name)
-
-	cmdRemote := exec.Command("git", "push", "origin", "--delete", b.Name)
-	remoteStdout, err := cmdRemote.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(remoteStdout))
-	}
-
-	logging.Instance().Debugf("deleted remote branch: %s", b.Name)
-
-	return nil
-}
-
 func (b *Branch) String() string {
-	return fmt.Sprintf("Branch: { Name: %s, Remote Exists: %t }", b.Name, b.RemoteExists)
+	return b.Name
 }

@@ -71,6 +71,9 @@ func (f *Feature) UpdateTestCount() error {
 
 func (f *Feature) CreateReleaseTags(r *git.Repository, version semver.Semver) error {
 	tagMessage := fmt.Sprintf("(%s): %s %s", version, f.Jira, f.Comment)
+
+	logging.Instance().Debugf("creating release tag with message: %s", tagMessage)
+
 	err := r.CreateTag(version.String(), tagMessage, false)
 	if err != nil {
 		return err

@@ -89,6 +89,11 @@ func (fc *FeatureCommand) Run() error {
 		return errors.New("invalid Jira format ... example of a valid format would be 'JIRA-0023'")
 	}
 
+	if fc.CustomVersionPrefix != config.AppConfig().TagPrefix() && fc.CustomVersionPrefix != "" {
+		logging.Instance().Debugf("setting application preset for prefix: %s", fc.CustomVersionPrefix)
+		config.AppConfig().SetTagPrefix(fc.CustomVersionPrefix)
+	}
+
 	r, err := git.NewRepository()
 	if err != nil {
 		return err
@@ -105,10 +110,6 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("failed to create feature object. %v", err)
 	}
 
-	if fc.CustomVersionPrefix != config.AppConfig().TagPrefix() && fc.CustomVersionPrefix != "" {
-		config.AppConfig().SetTagPrefix(feature.CustomVersionPrefix)
-	}
-
 	if r.VersionPrefix != config.AppConfig().TagPrefix() {
 		logging.Instance().Warnf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), r.VersionPrefix)
 		if c := prompt.String("continue with feature creation (Y/n)? "); strings.ToUpper(c) != "Y" {
@@ -123,7 +124,7 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("there is already a branch in this repo named %s", feature.Jira)
 	}
 
-	if !fc.FromFeature {
+	if fc.FromFeature {
 		return errors.New("from-feature not implemented yet")
 	}
 

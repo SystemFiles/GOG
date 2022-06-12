@@ -92,11 +92,6 @@ func (fc *FinishCommand) Init(args []string) error {
 }
 
 func (fc *FinishCommand) Run() error {
-	r, err := git.NewRepository()
-	if err != nil {
-		return err
-	}
-
 	GOGDir := common.GOGPath()
 
 	if !common.PathExists(GOGDir + "/feature.json") {
@@ -109,8 +104,16 @@ func (fc *FinishCommand) Run() error {
 	}
 
 	if feature.CustomVersionPrefix != config.AppConfig().TagPrefix() && feature.CustomVersionPrefix != "" {
+		logging.Instance().Debugf("setting application preset for prefix: %s", feature.CustomVersionPrefix)
 		config.AppConfig().SetTagPrefix(feature.CustomVersionPrefix)
 	}
+
+	r, err := git.NewRepository()
+	if err != nil {
+		return err
+	}
+
+	*r.FeatureBranch = *r.CurrentBranch
 
 	if r.VersionPrefix != config.AppConfig().TagPrefix() {
 		logging.Instance().Warnf("feature version prefix specified does not match existing prefix for this git project ('%s' != '%s')", config.AppConfig().TagPrefix(), r.VersionPrefix)
@@ -129,9 +132,13 @@ func (fc *FinishCommand) Run() error {
 		return fmt.Errorf("failed to update the changelog. %v", err)
 	}
 
+	prompt.String("Press any key to continue...")
+
 	if err := changelog.WriteChangelogToFile(changelogLines); err != nil {
 		return fmt.Errorf("failed to write changelog entry. %v", err)
 	}
+
+	prompt.String("Press any key to continue...")
 
 	if err := os.RemoveAll(GOGDir); err != nil {
 		return fmt.Errorf("failed to remove GOG directory. %v", err)
@@ -141,7 +148,29 @@ func (fc *FinishCommand) Run() error {
 		return err
 	}
 
-	if err := r.CommitChanges(feature.Comment); err != nil {
+	if err := r.CommitChanges("remove GOG metadata"); err != nil {
+		return err
+	}
+
+	prompt.String("Press any key to continue...")
+
+	if err := r.Rebase(); err != nil {
+		return fmt.Errorf("failed to rebase commits into new release. %v", err)
+	}
+
+	if err := r.CheckoutBranch(r.DefaultBranch, false, false); err != nil {
+		return err
+	}
+
+	if err := r.SquashMerge(); err != nil {
+		return fmt.Errorf("failed to perform squash-merge for new release. %v", err)
+	}
+
+	if err := r.StageChanges(); err != nil {
+		return err
+	}
+
+	if err := r.CommitChanges(strings.Join([]string{feature.Jira, feature.Comment}, " ")); err != nil {
 		return err
 	}
 
@@ -152,28 +181,18 @@ func (fc *FinishCommand) Run() error {
 	if err := r.Push(); err != nil {
 		return err
 	}
-	
-	if err := r.Rebase(); err != nil {
-		return fmt.Errorf("failed to rebase commits into new release. %v", err)
-	}
 
-	if err := r.CheckoutBranch(r.DefaultBranch, false, false); err != nil {
-		return err
-	}
+	prompt.String("Press any key to continue...")
 
-	if err := feature.CreateReleaseTags(r, r.LastTag); err != nil {
+	if err := feature.CreateReleaseTags(r, updatedVersion); err != nil {
 		return fmt.Errorf("failed to create release tags. %v", err)
-	}
-
-	if err := r.Push(); err != nil {
-		return fmt.Errorf("failed to push rebase to remote. %v", err)
 	}
 
 	if err := r.PushTags(); err != nil {
 		return fmt.Errorf("failed to publish release tags to remote. %v", err)
 	}
 
-	if err := r.FeatureBranch.Delete(); err != nil {
+	if err := r.DeleteFeatureBranch(); err != nil {
 		return fmt.Errorf("failed to delete existing feature branch for %s. %v", feature.Jira, err)
 	}
 
