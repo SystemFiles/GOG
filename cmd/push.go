@@ -64,8 +64,6 @@ func (pc *PushCommand) Run() error {
 		return err
 	}
 
-	r.FeatureBranch = r.CurrentBranch
-
 	GOGDir := common.GOGPath()
 
 	if !common.PathExists(GOGDir + "/feature.json") {
@@ -78,6 +76,8 @@ func (pc *PushCommand) Run() error {
 	}
 	defer feature.Save()
 	
+	r.FeatureBranch = r.CurrentBranch
+
 	if pc.message == "" {
 		pc.message = fmt.Sprintf("%s Test Build (%d)", feature.Jira, feature.TestCount)
 		feature.UpdateTestCount()
@@ -93,7 +93,7 @@ func (pc *PushCommand) Run() error {
 		return err
 	}
 
-	if r.CurrentBranch.RemoteExists {
+	if r.FeatureBranch.RemoteExists {
 		if err := r.PullChanges(); err != nil {
 			return err
 		}

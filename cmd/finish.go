@@ -184,7 +184,7 @@ func (fc *FinishCommand) Run() error {
 		return fmt.Errorf("failed to publish release tags to remote. %v", err)
 	}
 
-	if err := r.DeleteFeatureBranch(); err != nil {
+	if err := r.DeleteBranch(r.FeatureBranch); err != nil {
 		return fmt.Errorf("failed to delete existing feature branch for %s. %v", feature.Jira, err)
 	}
 

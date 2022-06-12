@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 
 	"sykesdev.ca/gog/internal/logging"
 	"sykesdev.ca/gog/internal/update"
@@ -45,6 +47,10 @@ func (usc *UpdateSelfCommand) Init(args []string) error {
 }
 
 func (usc *UpdateSelfCommand) Run() error {
+	if runtime.GOOS == "windows" {
+		return errors.New("NOT IMPLEMENTED - currently the in-place upgrade feature will not work on Windows")
+	}
+
 	logging.Instance().Info("Performing in-place upgrade for GOG ...")
 
 	u, err := update.NewUpdater(usc.tag)

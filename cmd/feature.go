@@ -136,9 +136,9 @@ func (fc *FeatureCommand) Run() error {
 		return fmt.Errorf("failed to pull some changes before creating the new feature. %v", err)
 	}
 
-	fb := git.NewBranch(feature.Jira)
+	r.FeatureBranch = git.NewBranch(feature.Jira)
 
-	if err := r.CheckoutBranch(fb, true, true); err != nil {
+	if err := r.CheckoutBranch(r.FeatureBranch, true, true); err != nil {
 		return fmt.Errorf("failed to create or checkout new feature branch, %s. %v", feature.Jira, err)
 	}
 

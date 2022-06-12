@@ -19,14 +19,13 @@ type Repository struct {
 	DefaultBranch *Branch
 	FeatureBranch *Branch
 	CurrentBranch *Branch
-	LastTag semver.Semver
 
-	mutex sync.Mutex
+	LastTag semver.Semver
 }
 
 func NewRepository() (*Repository, error) {
 	var wg sync.WaitGroup
-	r := &Repository{mutex: sync.Mutex{}, FeatureBranch: &Branch{}}
+	r := &Repository{FeatureBranch: &Branch{}}
 
 	rootChan := make(chan []string)
 	prefixChan, dBranchChan, cBranchChan := make(chan string), make(chan string), make(chan string)
@@ -167,8 +166,24 @@ func (r *Repository) CheckoutBranch(branch *Branch, create, isFeature bool) erro
 	return nil
 }
 
-func (r *Repository) DeleteFeatureBranch() error {
-	return deleteBranch(r.FeatureBranch)
+func (r *Repository) DeleteBranch(branch *Branch) error {
+	cmdLocal := exec.Command("git", "branch", "-D", branch.Name)
+	localStdout, err := cmdLocal.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(localStdout))
+	}
+
+	logging.Instance().Debugf("deleted local branch: %s", branch.Name)
+
+	cmdRemote := exec.Command("git", "push", "origin", "--delete", branch.Name)
+	remoteStdout, err := cmdRemote.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(remoteStdout))
+	}
+
+	logging.Instance().Debugf("deleted remote branch: %s", branch.Name)
+
+	return nil
 }
 
 func (r *Repository) StageChanges() error {

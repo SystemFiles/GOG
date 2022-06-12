@@ -139,26 +139,6 @@ func originLatestFullVersion() (semver.Semver, error) {
 	return latestTag, nil
 }
 
-func deleteBranch(branch *Branch) error {
-	cmdLocal := exec.Command("git", "branch", "-D", branch.Name)
-	localStdout, err := cmdLocal.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(localStdout))
-	}
-
-	logging.Instance().Debugf("deleted local branch: %s", branch.Name)
-
-	cmdRemote := exec.Command("git", "push", "origin", "--delete", branch.Name)
-	remoteStdout, err := cmdRemote.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(remoteStdout))
-	}
-
-	logging.Instance().Debugf("deleted remote branch: %s", branch.Name)
-
-	return nil
-}
-
 func originLatestTagName() (string, error) {
 	cmd := exec.Command("git", "describe", "--tags", "--abbrev=0")
 	stdout, err := cmd.CombinedOutput()

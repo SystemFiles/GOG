@@ -8,6 +8,7 @@ import (
 	"sykesdev.ca/gog/internal/logging"
 )
 
+// TODO should not transform its own state - remote update and find alternative workflow
 type Branch struct {
 	Name string `json:"name"`
 	RemoteExists bool `json:"remote_exists"`
