@@ -28,17 +28,16 @@ func gitLatestTestBuild(r *git.Repository) int {
 		return -1
 	}
 
-	re, err := regexp.Compile(`\([0-9]\)$`)
+	re, err := regexp.Compile(`\([0-9]{0,5}\)$`)
 	if err != nil {
 		return -1
 	}
 
-	if loc := re.FindStringIndex(prev[0]); loc != nil {
-		res, err := strconv.ParseInt(string(prev[0][loc[0]+1]), 10, 32)
+	if match := re.FindStringSubmatch(prev[0]); match != nil {
+		res, err := strconv.ParseInt(match[0][1:len(match[0])-1], 10, 64)
 		if err != nil {
 			return -1
 		}
-
 		return int(res)
 	}
 
@@ -106,12 +105,11 @@ func (c *SimplePushCommand) Run() error {
 		}
 	}
 
-	buildNumber := gitLatestTestBuild(r)
-
 	if c.message == "" {
+		buildNumber := gitLatestTestBuild(r)
 		c.message = fmt.Sprintf("%s Test Build (%d)", r.CurrentBranch, buildNumber + 1)
 	}	else {
-		c.message = fmt.Sprintf("%s %s (%d)", r.CurrentBranch, c.message, buildNumber + 1)
+		c.message = fmt.Sprintf("%s %s", r.CurrentBranch, c.message)
 	}
 
 	if err := r.StageChanges(); err != nil {

@@ -1,10 +1,21 @@
 
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+
+## [ 0.5.4 ] - 2022-6-12 17:56:35
+
+> BENS-0029 Simple Push with Message and Fix for SP Build Number Matching
+
+### Changed
+
+- `4340c98` - BENS-0029 updated feature description
+- `36c5cfb` - BENS-0029 implemented fix for simple push regex + enabled custom message without build number
 
 
 
