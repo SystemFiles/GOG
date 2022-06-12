@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.5.3 ] - 2022-6-12 17:4:35
+
+> BENS-0028 Better Code Reuse and Maintainability
+
+### Changed
+
+- `77dfb8a` - BENS-0028 adjustments to usage documentation
+- `f5b3d6c` - BENS-0028 final cleanup
+- `2d7e32d` - BENS-0028 removed need for branch to manage its own state
+- `7e671ba` - BENS-0028 more cleanup
+- `b6fec2d` - BENS-0028 removed debug breakpoints
+- `c725e90` - BENS-0028 checkpoint; fixed race condition by removing chan buffering + added squash merge
+- `7a7521a` - BENS-0028 checkpoint; refactored into repo and branch
+
+
+
 ## [ 0.5.2 ] - 2022-5-22 13:55:28
 
 > BENS-0027 optimize release workflow
