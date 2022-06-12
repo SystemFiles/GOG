@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"sykesdev.ca/gog/config"
-	"sykesdev.ca/gog/internal/common"
 	"sykesdev.ca/gog/internal/git"
 	"sykesdev.ca/gog/internal/logging"
 	"sykesdev.ca/gog/internal/models"
@@ -99,12 +98,6 @@ func (fc *FeatureCommand) Run() error {
 		return err
 	}
 
-	GOGDir := common.GOGPath()
-
-	if common.PathExists(GOGDir) {
-		return errors.New("GOG Directory already exists ... there could already be a feature here")
-	}
-
 	feature, err := models.NewFeature(fc.Jira, fc.Comment, fc.CustomVersionPrefix)
 	if err != nil {
 		return fmt.Errorf("failed to create feature object. %v", err)
@@ -126,6 +119,14 @@ func (fc *FeatureCommand) Run() error {
 
 	if fc.FromFeature {
 		return errors.New("from-feature not implemented yet")
+	}
+
+	if err := r.StageChanges(); err != nil {
+		return err
+	}
+
+	if r.CurrentBranch.UncommittedChanges() {
+		return fmt.Errorf("the current branch (%s) has uncommitted changes, please review and discard/commit them before starting a new feature", r.CurrentBranch)
 	}
 
 	if err := r.CheckoutBranch(r.DefaultBranch, false, false); err != nil {

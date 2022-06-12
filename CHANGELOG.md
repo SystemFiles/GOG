@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.5.5 ] - 2022-6-12 18:23:22
+
+> BENS-0030 fix feature creation from another feature or branch
+
+### Changed
+
+- `88c0dff` - BENS-0030 implemented fix
+
+
+
 ## [ 0.5.4 ] - 2022-6-12 17:56:35
 
 > BENS-0029 Simple Push with Message and Fix for SP Build Number Matching
