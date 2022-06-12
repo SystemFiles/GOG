@@ -25,13 +25,6 @@ func NewBranch(name string) *Branch {
 	return b
 }
 
-func (b *Branch) UpdateBranch(branch string) {
-	b.Name = branch
-
-	b.RemoteExists = remoteBranchExists(b)
-	b.LocalExists = localBranchExists(b)
-}
-
 func (b *Branch) UncommittedChanges() bool {
 	cmd := exec.Command("bash", "-c", "git status --porcelain | egrep '^[A,M,D,R]'")
 	_, err := cmd.Output()

@@ -158,7 +158,7 @@ func (r *Repository) CheckoutBranch(branch *Branch, create, isFeature bool) erro
 		return fmt.Errorf("%v. %s", err, common.CleanstdoutMultiline(stdout))
 	}
 
-	r.CurrentBranch.UpdateBranch(branch.Name)
+	r.CurrentBranch = NewBranch(branch.Name)
 	if create && isFeature {
 		r.FeatureBranch = NewBranch(branch.Name)
 	}
