@@ -14,7 +14,7 @@ import (
 
 func root() error {
 	if len(os.Args[1:]) < 1 {
-		return errors.New("you must pass a sub-command\nUsage: gog <feature | push | finish> [options ...] [-h] [-help]")
+		return errors.New("you must pass a sub-command\nUsage: gog <feature(feat) | push(p) | finish(fin) | update | simple-push(sp)> [options ...] [-h] [-help]")
 	}
 
 	if common.StringInSlice(os.Args, "-v") || common.StringInSlice(os.Args, "-version") {

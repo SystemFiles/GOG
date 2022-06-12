@@ -73,7 +73,7 @@ func (c *SimplePushCommand) Init(args []string) error {
 
 func (c *SimplePushCommand) Help() {
 	fmt.Printf(
-`Usage: %s %s [message] [-h] [-help]
+`Usage: %s (%s | %s) [message] [-h] [-help]
 
 Simple-Push is a utility to allow non-feature related code pushes directly to the current remote branch. If used without a message one will be generated.
 
@@ -81,7 +81,7 @@ Simple-Push is a utility to allow non-feature related code pushes directly to th
 
 message
 	(optionally) specifies a commit message for this simple push operation
-`, os.Args[0], c.name)
+`, os.Args[0], c.name, c.alias)
 	
 	c.fs.PrintDefaults()
 

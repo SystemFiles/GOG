@@ -24,7 +24,7 @@ TBD
 
 ```bash
 
-gog (feature | push | finish) [options ...] [-h] [-help]
+gog (feature(feat) | push(p) | finish(fin)) [options ...] [-h] [-help]
 
 ```
 
@@ -81,6 +81,42 @@ Usage: gog (finish | fin) (-major | -minor | -patch) [-h] [-help]
       specifies that in this feature you add functionality in a backwards compatible manner (non-breaking)
   -patch
       specifies that in this feature you make backwards compatible bug fixes small backwards compatible updates
+
+-------================================-------
+
+```
+
+### Simple Push (no feature attached)
+
+While this does not fit into the opinionated workflow defined by the commands above, it is sometimes necessary to perform a simple push when collaborating on projects that do not exactly follow the workflow.
+
+```bash
+
+Usage: ../GOG/dist/gog (simple-push | sp) [message] [-h] [-help]
+
+Simple-Push is a utility to allow non-feature related code pushes directly to the current remote branch. If used without a message one will be generated for you.
+
+-------====== Simple-Push Arguments ======-------
+
+message
+    (optionally) specifies a commit message for this simple push operation
+
+-------================================-------
+
+```
+
+## Updating GOG
+
+Updating GOG (if on Darwin or Linux) can be done in-place using the `gog update` command.
+
+```bash
+
+Usage: ../GOG/dist/gog update [-tag TAG] [-h] [-help]
+
+--------======= Tag Arguments =======--------
+
+  -tag string
+        specifies a specific version tag to use for update
 
 -------================================-------
 
