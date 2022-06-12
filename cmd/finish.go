@@ -132,13 +132,9 @@ func (fc *FinishCommand) Run() error {
 		return fmt.Errorf("failed to update the changelog. %v", err)
 	}
 
-	prompt.String("Press any key to continue...")
-
 	if err := changelog.WriteChangelogToFile(changelogLines); err != nil {
 		return fmt.Errorf("failed to write changelog entry. %v", err)
 	}
-
-	prompt.String("Press any key to continue...")
 
 	if err := os.RemoveAll(GOGDir); err != nil {
 		return fmt.Errorf("failed to remove GOG directory. %v", err)
@@ -151,8 +147,6 @@ func (fc *FinishCommand) Run() error {
 	if err := r.CommitChanges("remove GOG metadata"); err != nil {
 		return err
 	}
-
-	prompt.String("Press any key to continue...")
 
 	if err := r.Rebase(); err != nil {
 		return fmt.Errorf("failed to rebase commits into new release. %v", err)
@@ -181,8 +175,6 @@ func (fc *FinishCommand) Run() error {
 	if err := r.Push(); err != nil {
 		return err
 	}
-
-	prompt.String("Press any key to continue...")
 
 	if err := feature.CreateReleaseTags(r, updatedVersion); err != nil {
 		return fmt.Errorf("failed to create release tags. %v", err)
