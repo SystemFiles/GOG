@@ -84,23 +84,23 @@ func (pc *PushCommand) Run() error {
 	} else {
 		pc.message = strings.Join([]string{feature.Jira, pc.message}, " ")
 	}
-	
+
 	if err := r.StageChanges(); err != nil {
-		return err
+		return fmt.Errorf("failed to stage current changes for %s. %v", r.CurrentBranch, err)
 	}
 
 	if err := r.CommitChanges(pc.message); err != nil {
-		return err
+		return fmt.Errorf("failed to commit current changes for %s. %v", r.CurrentBranch, err)
 	}
 
-	if r.FeatureBranch.RemoteExists {
+	if r.CurrentBranch.RemoteExists {
 		if err := r.PullChanges(); err != nil {
-			return err
+			return fmt.Errorf("failed to ensure %s is up to date with remote. %v", r.CurrentBranch, err)
 		}
 	}
 
 	if err := r.Push(); err != nil {
-		return err
+		return fmt.Errorf("failed to push local commits to remote. %v", err)
 	}
 
 	logging.Instance().Info("Successfully pushed changes to remote feature!")

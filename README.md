@@ -71,16 +71,20 @@ message
 
 ```bash
 
-Usage: gog (finish | fin) (-major | -minor | -patch) [-h] [-help]
+Usage: gog (finish | fin) (-major | -minor | -patch) [ additional_options... ] [-h] [-help]
 
 -------====== Finish Arguments ======-------
 
   -major
-      specifies that in this freature you make incompatible API changes (breaking changes)
+    specifies that in this freature you make incompatible API changes (breaking changes)
   -minor
-      specifies that in this feature you add functionality in a backwards compatible manner (non-breaking)
+    specifies that in this feature you add functionality in a backwards compatible manner (non-breaking)
   -patch
-      specifies that in this feature you make backwards compatible bug fixes small backwards compatible updates
+    specifies that in this feature you make backwards compatible bug fixes small backwards compatible updates
+  -no-changelog
+    if this flag is set, no changelog creation or updates shall be performed when finishing this feature release
+  -no-tag
+    if this flag is set, no version tagging shall be applied to this finished feature release
 
 -------================================-------
 

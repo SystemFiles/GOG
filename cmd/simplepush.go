@@ -113,19 +113,21 @@ func (c *SimplePushCommand) Run() error {
 	}
 
 	if err := r.StageChanges(); err != nil {
-		return err
+		return fmt.Errorf("failed to stage changes for %s. %v", r.CurrentBranch, err)
 	}
 
 	if err := r.CommitChanges(c.message); err != nil {
-		return err
+		return fmt.Errorf("failed to commit changes for %s. %v", r.CurrentBranch, err)
 	}
 	
-	if err := r.PullChanges(); err != nil {
-		return err
+	if r.CurrentBranch.RemoteExists {
+		if err := r.PullChanges(); err != nil {
+			return fmt.Errorf("failed to ensure %s is up to date with remote. %v", r.CurrentBranch, err)
+		}
 	}
 
 	if err := r.Push(); err != nil {
-		return err
+		return fmt.Errorf("failed to push changes to remote for %s. %v", r.CurrentBranch, err)
 	}
 
 	logging.Instance().Info("Successfully pushed changes to remote (" + r.CurrentBranch.Name + ")!")

@@ -42,6 +42,9 @@ type FinishCommand struct {
 	major bool
 	minor bool
 	patch bool
+
+	noChangelog bool
+	noTag bool
 }
 
 func NewFinishCommand() *FinishCommand {
@@ -54,6 +57,8 @@ func NewFinishCommand() *FinishCommand {
 	fc.fs.BoolVar(&fc.major, "major", false, "specifies that in this freature you make incompatible API changes (breaking changes)")
 	fc.fs.BoolVar(&fc.minor, "minor", false, "specifies that in this feature you add functionality in a backwards compatible manner (non-breaking)")
 	fc.fs.BoolVar(&fc.patch, "patch", false, "specifies that in this feature you make backwards compatible bug fixes small backwards compatible updates")
+	fc.fs.BoolVar(&fc.noChangelog, "no-changelog", false, "if this flag is set, no changelog creation or updates shall be performed when finishing this feature release")
+	fc.fs.BoolVar(&fc.noTag, "no-tag", false, "if this flag is set, no version tagging shall be applied to this finished feature release")	
 
 	fc.fs.Usage = fc.Help
 
@@ -62,7 +67,7 @@ func NewFinishCommand() *FinishCommand {
 
 func (fc *FinishCommand) Help() {
 	fmt.Printf(
-`Usage: %s (%s | %s) (-major | -minor | -patch) [-h] [-help]
+`Usage: %s (%s | %s) (-major | -minor | -patch) [ additional_options... ] [-h] [-help]
 
 -------====== Finish Arguments ======-------
 
@@ -124,16 +129,22 @@ func (fc *FinishCommand) Run() error {
 		logging.Instance().Info("continuing with feature release against warning")
 	}
 
-	updatedVersion := bumpReleaseVersion(r.LastTag, fc.action)
-	
-	changelogEntry := changelog.NewChangelogEntry(feature, r, updatedVersion, fc.action == "MAJOR" || fc.action == "MINOR")
-	changelogLines, err := changelog.CreateChangeLogLines(changelogEntry)
-	if err != nil {
-		return fmt.Errorf("failed to update the changelog. %v", err)
+	if err := r.PullChanges(); err != nil {
+		return fmt.Errorf("failed to ensure %s is up to date with remote. %v", r.CurrentBranch, err)
 	}
 
-	if err := changelog.WriteChangelogToFile(changelogLines); err != nil {
-		return fmt.Errorf("failed to write changelog entry. %v", err)
+	updatedVersion := bumpReleaseVersion(r.LastTag, fc.action)
+
+	if !fc.noChangelog && !fc.noTag {
+		changelogEntry := changelog.NewChangelogEntry(feature, r, updatedVersion, fc.action == "MAJOR" || fc.action == "MINOR")
+		changelogLines, err := changelog.CreateChangeLogLines(changelogEntry)
+		if err != nil {
+			return fmt.Errorf("failed to update the changelog. %v", err)
+		}
+
+		if err := changelog.WriteChangelogToFile(changelogLines); err != nil {
+			return fmt.Errorf("failed to write changelog entry. %v", err)
+		}
 	}
 
 	if err := os.RemoveAll(GOGDir); err != nil {
@@ -141,10 +152,10 @@ func (fc *FinishCommand) Run() error {
 	}
 
 	if err := r.StageChanges(); err != nil {
-		return err
+		return fmt.Errorf("failed to stage removal of GOG metadata folder on %s. %v", r.CurrentBranch, err)
 	}
 
-	if err := r.CommitChanges("remove GOG metadata"); err != nil {
+	if err := r.CommitChanges("remove GOG metadata folder"); err != nil {
 		return err
 	}
 
@@ -153,7 +164,11 @@ func (fc *FinishCommand) Run() error {
 	}
 
 	if err := r.CheckoutBranch(r.DefaultBranch, false, false); err != nil {
-		return err
+		return fmt.Errorf("failed to checkout branch (%s). %v", r.DefaultBranch, err)
+	}
+
+	if err := r.PullChanges(); err != nil {
+		return fmt.Errorf("failed to ensure %s is up to date with remote. %v", r.CurrentBranch, err)
 	}
 
 	if err := r.SquashMerge(); err != nil {
@@ -161,27 +176,25 @@ func (fc *FinishCommand) Run() error {
 	}
 
 	if err := r.StageChanges(); err != nil {
-		return err
+		return fmt.Errorf("failed to stage final changes to %s. %v", r.CurrentBranch, err)
 	}
 
 	if err := r.CommitChanges(strings.Join([]string{feature.Jira, feature.Comment}, " ")); err != nil {
-		return err
-	}
-
-	if err := r.PullChanges(); err != nil {
-		return err
+		return fmt.Errorf("failed to commit final changes to %s. %v", r.CurrentBranch, err)
 	}
 
 	if err := r.Push(); err != nil {
-		return err
+		return fmt.Errorf("failed to push final changes to %s. %v", r.CurrentBranch, err)
 	}
 
-	if err := feature.CreateReleaseTags(r, updatedVersion); err != nil {
-		return fmt.Errorf("failed to create release tags. %v", err)
-	}
+	if !fc.noTag {
+		if err := feature.CreateReleaseTags(r, updatedVersion); err != nil {
+			return fmt.Errorf("failed to create release tags. %v", err)
+		}
 
-	if err := r.PushTags(); err != nil {
-		return fmt.Errorf("failed to publish release tags to remote. %v", err)
+		if err := r.PushTags(); err != nil {
+			return fmt.Errorf("failed to publish release tags to remote. %v", err)
+		}
 	}
 
 	if err := r.DeleteBranch(r.FeatureBranch); err != nil {

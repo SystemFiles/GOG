@@ -122,15 +122,15 @@ func (fc *FeatureCommand) Run() error {
 	}
 
 	if err := r.StageChanges(); err != nil {
-		return err
+		return fmt.Errorf("failed to stage changes on current branch (%s) before starting new feature. %v", r.CurrentBranch, err)
 	}
 
-	if r.CurrentBranch.UncommittedChanges() {
+	if r.CurrentBranch.UncommittedChanges() && r.CurrentBranch.Name != r.DefaultBranch.Name {
 		return fmt.Errorf("the current branch (%s) has uncommitted changes, please review and discard/commit them before starting a new feature", r.CurrentBranch)
 	}
 
 	if err := r.CheckoutBranch(r.DefaultBranch, false, false); err != nil {
-		return err
+		return fmt.Errorf("failed to checkout branch %s. %v", r.DefaultBranch, err)
 	}
 
 	if err := r.PullChanges(); err != nil {

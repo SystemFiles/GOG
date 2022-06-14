@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.5.6 ] - 2022-6-14 3:30:11
+
+> BENS-0031 Implement Option to Disable Tag/Changelog Creation
+
+### Changed
+
+- `1be7252` - BENS-0031 updated usage docs and help page for finish command
+- `f8e1dd4` - BENS-0031 changelog and tag flags adjusted and sensitivity of feature create more reasonable
+- `4b80ebf` - BENS-0031 options added and error messages enhanced to be more useful
+
+
+
 ## [ 0.5.5 ] - 2022-6-12 18:23:22
 
 > BENS-0030 fix feature creation from another feature or branch
