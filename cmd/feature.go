@@ -79,7 +79,7 @@ func (fc *FeatureCommand) Init(args []string) error {
 }
 
 func (fc *FeatureCommand) Run() error {
-	validJiraFormat, err := regexp.Match(`^[A-Z].*\-[0-9].*$`, []byte(fc.Jira))
+	validJiraFormat, err := regexp.Match(`^([A-Za-z])+-([0-9])+$`, []byte(fc.Jira))
 	if err != nil {
 		return fmt.Errorf("failed to parse regular expression for Jira format. %v", err)
 	}

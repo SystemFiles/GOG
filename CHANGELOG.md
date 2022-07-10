@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [ 0.5.7 ] - 2022-7-10 14:4:12
+
+> BENS-0032 Fix Regular Expression Matching Jira
+
+### Changed
+
+- `a68eff5` - BENS-0032 implemented new regex to fix issue
+
+
+
 ## [ 0.5.6 ] - 2022-6-14 3:30:11
 
 > BENS-0031 Implement Option to Disable Tag/Changelog Creation
